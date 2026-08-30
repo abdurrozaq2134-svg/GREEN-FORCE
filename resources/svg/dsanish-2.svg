@@ -1,0 +1,6 @@
+<svg width="250" height="300" viewBox="0 0 250 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="125,10 220,60 180,200 70,200 30,60" fill="#4ade80" opacity="0.45"/>
+    <polygon points="125,20 205,65 170,180 80,180 45,65" fill="#22c55e" opacity="0.35"/>
+    <polygon points="125,35 185,75 155,150 95,150 65,75" fill="#16a34a" opacity="0.25"/>
+    <path d="M125 100 C140 110 150 130 140 150 C130 170 110 175 100 160 C90 145 100 120 125 100 Z" fill="#dcfce7" opacity="0.3"/>
+</svg>

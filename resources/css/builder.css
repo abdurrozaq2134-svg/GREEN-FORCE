@@ -1,0 +1,1946 @@
+/* ===================== TOKEN WARNA BUILDER =====================
+   Diturunkan dari palet "Command Center Green Force" di komando.css supaya
+   builder satu bahasa dengan dashboard. Chrome (rail + toolbar) gelap hijau;
+   kanvas & panel tetap terang karena isinya adalah desain milik pengguna —
+   kanvas gelap akan menipu persepsi warna saat mereka mendesain.
+   ============================================================== */
+:root {
+  --bg-gradient: radial-gradient(ellipse 80% 50% at 0% 0%, #3F4A34 0%, #0A0E0A 100%);
+
+  /* Chrome gelap */
+  --bx-chrome:         #0b0f0b;
+  --bx-chrome-2:       #101610;
+  --bx-chrome-3:       #16201a;
+  --bx-chrome-line:    #1f3226;
+  --bx-chrome-text:    #b8c4a8;
+  --bx-chrome-text-hi: #e9e8c8;
+  --bx-chrome-muted:   #6a7a65;
+
+  /* Aksen lime — sama dengan --accent dashboard */
+  --bx-accent:         #a6c24b;
+  --bx-accent-dim:     #8aa83d;
+  --bx-accent-soft:    rgba(166, 194, 75, 0.14);
+  --bx-accent-glow:    rgba(166, 194, 75, 0.28);
+
+  /* Varian untuk permukaan terang (panel/kanvas) — kontras teks tetap aman */
+  --bx-accent-deep:    #4f6b1c;
+  --bx-accent-tint:    #f3f8e7;
+  --bx-accent-tint-2:  #e7f0d0;
+  --bx-accent-border:  #cbe08f;
+
+  --bx-danger:         #e0604a;
+
+  /* Easing bersama untuk seluruh transisi panel */
+  --bx-ease:           cubic-bezier(.22, .61, .36, 1);
+  --bx-ease-out:       cubic-bezier(.16, 1, .3, 1);
+}
+
+/* ===================== CANVA-STYLE SIDEBAR ===================== */
+
+.canva-sidebar {
+  display: flex;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+/* Rail ikon kiri - 60px */
+.canva-rail {
+  width: 60px;
+  background: var(--bx-chrome);
+  border-right: 1px solid var(--bx-chrome-line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 8px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.canva-rail-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 52px;
+  padding: 10px 0 8px;
+  border: none;
+  background: transparent;
+  color: var(--bx-chrome-text);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all .15s;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .2px;
+}
+
+.canva-rail-btn:hover {
+  background: var(--bx-chrome-3);
+  color: var(--bx-chrome-text-hi);
+}
+
+.canva-rail-btn.active {
+  background: var(--bx-accent-soft);
+  color: var(--bx-accent);
+}
+
+/* Penanda vertikal di tepi kiri, menggantikan blok warna penuh */
+.canva-rail-btn.active::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  width: 3px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: var(--bx-accent);
+  transform: translateY(-50%);
+}
+
+.canva-rail-btn svg {
+  transition: transform .18s var(--bx-ease);
+}
+
+.canva-rail-btn:hover svg {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.canva-rail-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.canva-rail-spacer {
+  flex: 1;
+}
+
+/* Sidebar container needs relative positioning for absolute toggle button */
+.canva-sidebar {
+  /* OVERLAY di dalam .builder-body yang posisinya sudah tepat
+     di bawah navbar â€” jadi cukup top: 0 */
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 700;
+  box-shadow: 8px 0 24px rgba(0,0,0,.10);
+  transition: transform .25s ease;
+}
+
+/* Sidebar toggle button - absolute positioned at vertical center, right edge.
+   Only visible when panel is EXPANDED (not rendered when collapsed) */
+.sidebar-toggle-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #ffffff;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 0 10px 10px 0;
+  box-shadow: -4px 0 16px rgba(0,0,0,.1);
+  border: 1px solid #e5e7eb;
+  border-left: none;
+  transition: all .2s ease;
+  z-index: 20;
+  outline: none; /* Hilangkan outline default browser */
+}
+
+/* Half-circle protruding into canvas area */
+.sidebar-toggle-btn::before {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 32px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  pointer-events: none;
+}
+
+.sidebar-toggle-btn:hover {
+  background: #f9fafb;
+  color: #374151;
+  box-shadow: -6px 0 20px rgba(0,0,0,.15);
+}
+
+.sidebar-toggle-btn:focus-visible {
+  outline: none;
+  box-shadow: -6px 0 20px rgba(0,0,0,.15), 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+.sidebar-toggle-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform .2s ease;
+}
+
+/* Collapsed sidebar state */
+.canva-sidebar.collapsed .canva-panel {
+  width: 0;
+  opacity: 0;
+  border-right-color: transparent;
+  pointer-events: none;
+}
+
+/* Panel konten - muncul di kanan rail */
+/* Stagger rapat: 5 langkah x 30ms, item ke-6 dan seterusnya ikut langkah
+   terakhir supaya panel panjang tidak terasa menetes satu per satu. */
+.canva-panel-body > *:nth-child(1) { animation-delay: 0ms; }
+.canva-panel-body > *:nth-child(2) { animation-delay: 30ms; }
+.canva-panel-body > *:nth-child(3) { animation-delay: 60ms; }
+.canva-panel-body > *:nth-child(4) { animation-delay: 90ms; }
+.canva-panel-body > *:nth-child(n+5) { animation-delay: 120ms; }
+
+.canva-panel {
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  transition:
+    width .34s var(--bx-ease-out),
+    opacity .22s var(--bx-ease-out),
+    border-color .22s ease;
+}
+
+/* Upload dropzone */
+.upload-dropzone {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 28px 20px;
+  background: #f8fafc;
+  transition: all .2s ease;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  position: relative;
+}
+
+.upload-dropzone:hover,
+.upload-dropzone.drag-over {
+  border-color: var(--bx-accent-dim);
+  background: #eef2ff;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.upload-dropzone:focus-within {
+  border-color: var(--bx-accent-deep);
+  background: #eef2ff;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2), 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.upload-dropzone-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.upload-dropzone-label p {
+  line-height: 1.4;
+}
+
+/* Drag over state */
+.upload-dropzone.drag-over {
+  border-style: solid;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); }
+  50% { box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3); }
+}
+
+/* Text preset list - vertical layout */
+.text-preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Text preset button (Tambahkan kotak teks) */
+.text-preset-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fafbfc;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all .15s ease;
+}
+
+.text-preset-btn:hover {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+
+.text-preset-btn:active {
+  transform: scale(.98);
+}
+
+.text-preset-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+.text-preset-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+.text-preset-btn-label {
+  flex: 1;
+}
+
+/* Text preset cards (Heading, Subheading, Body) */
+.text-preset-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.text-preset-card:hover {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+
+.text-preset-card:active {
+  transform: scale(.98);
+}
+
+.text-preset-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+.text-preset-preview {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.text-preset-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+/* Animasi masuk panel editor.
+   Sebelumnya: slide 10px + fade 0.2s, lalu body fade 0.3s dengan delay 0.2s,
+   lalu tiap kartu di-stagger sampai 0.45s — total hampir 0.65s dan terasa
+   patah karena tiga animasi terpisah saling menunggu. Sekarang satu gerakan
+   menyatu: panel melebar sambil naik-halus, isinya menyusul cepat. */
+.canva-panel-animate {
+  animation: panelSlideIn .34s var(--bx-ease-out) both;
+}
+
+.canva-panel-body {
+  animation: panelBodyIn .26s var(--bx-ease-out) .06s both;
+}
+
+.canva-panel-body .panel-card,
+.canva-panel-body .text-preset-card,
+.canva-panel-body .button-preset-card,
+.canva-panel-body .upload-thumb,
+.canva-panel-body .layer-item {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: panelItemIn .26s var(--bx-ease-out) forwards;
+}
+
+
+.canva-panel-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.canva-panel-header h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.canva-panel-close {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: rgba(255,255,255,.9);
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 9999px;
+  font-size: 18px;
+  transition: all .15s;
+}
+
+.canva-panel-close:hover {
+  background: #ffffff;
+  color: #475569;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+
+/* Override - panah tanpa teks &times; */
+.canva-panel-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.canva-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* Section label */
+.panel-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin: 0 0 10px;
+}
+
+/* Panel grid (2 kolom) */
+.panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.panel-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafbfc;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.panel-card:hover {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+
+.panel-card:active {
+  transform: scale(.97);
+}
+
+.panel-card-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--bx-accent-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel-card-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+  text-align: center;
+}
+
+/* ===================== TEXT PRESETS ===================== */
+.text-preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.text-preset-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fafbfc;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.text-preset-card:hover {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+
+.text-preset-card:active {
+  transform: scale(.98);
+}
+
+.text-preset-preview {
+  font-family: 'Figtree', sans-serif;
+  line-height: 1.2;
+}
+
+.text-preset-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+/* ===================== BUTTON PRESETS ===================== */
+.button-preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.button-preset-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fafbfc;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.button-preset-card:hover {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+
+.button-preset-card:active {
+  transform: scale(.98);
+}
+
+.button-preset-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.button-preset-meta {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ===================== LAYERS ===================== */
+.layers-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.layers-panel .layer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+  transition: background .15s;
+  min-height: 36px;
+}
+
+.layers-panel .layer-item:hover {
+  background: #f3f4f6;
+}
+
+.layers-panel .layer-item.active {
+  background: var(--bx-accent-tint);
+  color: var(--bx-accent-deep);
+}
+
+.layers-panel .layer-icon {
+  width: 18px;
+  height: 18px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.layers-panel .layer-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layers-panel .layer-visibility {
+  width: 28px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.layers-panel .layer-visibility:hover {
+  color: #4b5563;
+  background: #f1f5f9;
+}
+
+.layers-panel .layer-delete {
+  width: 28px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.layers-panel .layer-delete:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.layers-panel .layers-empty {
+  font-size: 12px;
+  color: #94a3b8;
+  padding: 16px 0;
+  text-align: center;
+}
+
+/* ===================== CANVAS ===================== */
+.canvas-viewport {
+   flex: 1; overflow: auto;
+   background: #e5e7eb;
+   display: flex; justify-content: flex-start;
+   align-items: flex-start;
+   /* Margin kiri TETAP terhadap viewport (60px rail + 24px napas),
+      tidak berubah saat sidebar di-expand/collapse maupun saat seleksi */
+   padding: 12px 24px 32px 84px; /* dioverride inline (dinamis) */
+   transition: padding-left .25s ease;
+   }
+.canvas-page {
+  position: relative;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  width: 100%;
+  max-width: 1200px;
+  min-height: 600px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ===================== CANVAS ===================== */
+.canvas-element {
+  position: relative;
+  z-index: 10;
+}
+
+/* Click-catcher layer for reliable deselection on empty canvas */
+.canvas-click-catcher {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* ===================== DEVICE PREVIEW STYLES ===================== */
+.device-preview-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 24px;
+  padding-left: 24px;
+  border-left: 1px solid #e5e7eb;
+}
+
+.device-preview-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all .15s;
+}
+
+.device-preview-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.device-preview-btn.active {
+  background: var(--bx-accent);
+  color: #0a0e0a;
+}
+
+.device-preview-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ===================== RESPONSIVE ELEMENT RENDERING ===================== */
+/* Text elements with clamp for responsive font sizes */
+.el-text {
+  font-size: clamp(14px, 2.5vw, 32px);
+  color: inherit;
+  font-weight: inherit;
+  line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Images and videos responsive */
+.el-image {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.el-video {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.el-video iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 4px;
+}
+
+/* Buttons responsive */
+.el-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: clamp(13px, 1.8vw, 16px);
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  min-height: 44px;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+
+.el-button:hover { opacity: .92; }
+
+/* Shapes responsive */
+.el-shape {
+  width: 100%;
+  height: 100%;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: inherit;
+  box-sizing: border-box;
+}
+.el-countdown { display: flex; flex-direction: column; gap: 8px; }
+.countdown-label { font-size: 14px; font-weight: 500; color: #374151; }
+.countdown-grid { display: flex; gap: 8px; }
+.countdown-unit { display: flex; flex-direction: column; align-items: center; min-width: 36px; }
+.countdown-value { font-size: 24px; font-weight: 700; color: #111827; }
+.countdown-unit-label { font-size: 10px; color: #6b7280; text-transform: uppercase; }
+.el-rsvp { display: flex; flex-direction: column; gap: 8px; }
+.el-rsvp h4 { margin: 0; font-size: 18px; font-weight: 600; color: #111827; }
+.el-rsvp-sub { margin: 0; font-size: 14px; color: #6b7280; }
+.el-rsvp-field {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px; color: #9ca3af;
+  background: #f9fafb;
+}
+.el-rsvp-submit {
+  padding: 10px 16px;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none;
+  background: #4f46e5;
+  transition: background .15s;
+}
+.el-rsvp-submit:hover { background: #4338ca; }
+.el-schedule { display: flex; flex-direction: column; gap: 6px; }
+.el-schedule h4 { margin: 0; font-size: 16px; font-weight: 600; color: #111827; }
+.schedule-row { display: flex; gap: 12px; align-items: center; }
+.schedule-time { font-size: 13px; font-weight: 600; color: #4f46e5; min-width: 64px; }
+.schedule-desc { font-size: 13px; color: #374151; }
+.el-ticket { display: flex; flex-direction: column; gap: 6px; }
+.el-ticket h4 { margin: 0; font-size: 16px; font-weight: 600; color: #111827; }
+.ticket-tier { padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb; }
+.ticket-tier-name { font-size: 13px; font-weight: 600; color: #374151; }
+.ticket-tier-price { font-size: 14px; font-weight: 700; color: #10b981; }
+.ticket-tier-quota { font-size: 11px; color: #9ca3af; }
+.el-map { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #374151; }
+.el-poll { display: flex; flex-direction: column; gap: 8px; }
+.poll-question { font-size: 15px; font-weight: 600; color: #111827; }
+.poll-options { display: flex; flex-direction: column; gap: 4px; }
+.poll-option { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #374151; }
+.poll-option input { accent-color: #4f46e5; }
+.el-guestbook { display: flex; flex-direction: column; gap: 8px; }
+.el-guestbook h4 { margin: 0; font-size: 16px; font-weight: 600; color: #111827; }
+.el-guestbook textarea { padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; resize: none; }
+.el-feedback { display: flex; flex-direction: column; gap: 8px; }
+.el-feedback h4 { margin: 0; font-size: 16px; font-weight: 600; color: #111827; }
+.feedback-rating { display: flex; gap: 8px; }
+.feedback-star { font-size: 13px; color: #374151; cursor: pointer; }
+.feedback-star input { accent-color: #f59e0b; }
+.el-sponsor { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.el-sponsor a { color: #4f46e5; text-decoration: none; font-weight: 500; }
+.el-sponsor a:hover { text-decoration: underline; }
+
+/* ===================== RESIZE HANDLES ===================== */
+.resize-handle {
+  width: 14px; height: 14px;
+  background: #4f46e5;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 1000;
+  opacity: 0.5;
+  transition: opacity .15s, transform .15s;
+}
+
+.resize-handle:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Posisi dan kursor tiap sudut */
+.resize-handle.handle-nw { top: -7px; left: -7px; cursor: nwse-resize; }
+.resize-handle.handle-ne { top: -7px; right: -7px; cursor: nesw-resize; }
+.resize-handle.handle-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+.resize-handle.handle-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+
+/* -
+   ANIMASI PANEL
+   -*/
+
+@keyframes panelSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-14px);
+    clip-path: inset(0 100% 0 0);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes panelBodyIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes panelItemIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* -
+   EVENT SIDEBAR
+   -*/
+
+.event-sidebar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.event-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+  background: #ffffff;
+}
+
+.event-sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bx-accent-deep);
+  margin: 0;
+}
+
+.event-sidebar-title-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.event-sidebar-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}
+
+.event-sidebar-close:hover {
+  background: #f3f4f6;
+  color: #64748b;
+}
+
+.event-sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.event-sidebar-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin: 0 0 8px;
+}
+
+.event-component-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.event-component-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafbfc;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.event-component-card:hover {
+  border-color: var(--bx-accent-border);
+  background: var(--bx-accent-tint);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(79, 107, 28, .12);
+}
+
+.event-component-card:hover .event-component-icon {
+  background: var(--bx-accent-tint-2);
+  transform: scale(1.06);
+}
+
+.event-component-card:active {
+  transform: scale(.97);
+}
+
+.event-component-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--bx-accent-tint);
+  color: var(--bx-accent-deep);
+  transition: background .18s var(--bx-ease), transform .18s var(--bx-ease);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-component-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+  text-align: center;
+}
+
+.event-component-card.logic-card {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.event-component-card.logic-card:hover {
+  background: #dcfce7;
+  border-color: var(--bx-accent-dim);
+}
+
+.event-component-card.logic-card .event-component-icon {
+  color: #16a34a;
+}
+
+/* Override canva-panel-header untuk Event - tanpa tombol close */
+.canva-panel-header h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bx-accent-deep);
+}
+
+/* Hide old canva-panel-close since EventSidebar has its own header */
+.canva-panel:not(.has-close) .canva-panel-close {
+  display: none;
+}
+
+
+/* ------------------------------------------
+   AUTO-RESPONSIVE STYLES
+   ------------------------------------------ */
+
+/* Validation button in toolbar */
+.toolbar-right .btn-ghost svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+}
+
+/* Responsive lock indicator on canvas elements */
+.responsive-lock-indicator {
+  transition: all .15s ease;
+}
+
+.responsive-lock-indicator:hover {
+  transform: scale(1.1);
+}
+
+/* Responsive status banner in properties panel */
+.responsive-status-banner {
+  animation: slideDown .2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.responsive-status-banner .btn-reset-auto:hover {
+  background: var(--bx-accent-tint) !important;
+  border-color: var(--bx-accent-dim) !important;
+  color: var(--bx-accent-deep) !important;
+}
+
+/* Validation modal */
+.validation-modal-overlay {
+  animation: fadeIn .2s ease-out;
+}
+
+.validation-modal {
+  animation: slideUp .2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Clamp utility for responsive font sizes */
+@media (max-width: 1024px) {
+  .canvas-element [style*='clamp'] {
+    /* Ensure clamp() works properly in media queries */
+  }
+}
+
+/* Auto-responsive container stacking on mobile */
+@media (max-width: 768px) {
+  .el-container[style*='flex-direction: column'] {
+    width: 100%;
+  }
+
+  .el-container[style*='flex-direction: column'] > * {
+    width: 100%;
+  }
+
+  /* Button group stacking */
+  .el-button-group[style*='flex-direction: column'] .el-button {
+    width: 100%;
+  }
+
+  /* Image render order */
+  .el-image[style*='order: 999'] {
+    order: 999;
+  }
+
+  /* Navbar hamburger */
+  .el-navbar .hamburger-btn {
+    display: flex !important;
+  }
+
+  .el-navbar .navbar-menu {
+    display: none !important;
+  }
+
+  /* Pill group wrapping */
+  .el-pill-group {
+    flex-wrap: wrap !important;
+  }
+}
+
+
+
+/* ------------------------------------------
+
+/* End of AUTO-RESPONSIVE STYLES */
+
+/* ===================== AUTO-HEIGHT CANVAS ===================== */
+.canvas-page { min-height: 100vh; }
+.canvas-empty-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #9ca3af;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  pointer-events: none;
+}
+.canvas-empty-hint-sub { font-size: 12px; font-weight: 400; color: #c7cbd1; }
+
+/* ===================== SECTION WIDTH PRESETS (per-container) ===================== */
+.section-inner { width: 100%; margin-left: auto; margin-right: auto; }
+
+/* ===================== FLOATING PROPERTY EDITOR (Canva-style) ===================== */
+/* ===================== STRIP TOOLBAR PROPERTI (celah navbar-canvas) ===================== */
+.builder-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===================== HANDLE SETENGAH LINGKARAN (tepi kiri) ===================== */
+.canvas-edge-handle {
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: left center;
+  width: 24px;
+  height: 48px;
+  border: none;
+  border-radius: 0 24px 24px 0;
+  background: var(--bx-accent);
+  color: #0a0e0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 680;
+  transition: transform .22s var(--bx-ease), background .18s ease, box-shadow .22s var(--bx-ease);
+  box-shadow: 2px 0 6px rgba(0,0,0,0.15);
+}
+.canvas-edge-handle.near,
+.canvas-edge-handle:hover {
+  transform: translateY(-50%) scaleX(1.18);
+  background: var(--bx-accent-dim);
+  box-shadow: 4px 0 14px var(--bx-accent-glow);
+}
+
+.canvas-edge-handle:focus-visible {
+  outline: 2px solid var(--bx-accent);
+  outline-offset: 3px;
+}
+
+/* Konten panel edit objek di dalam sidebar */
+.obj-editor-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* Cegah panel meluber & menutupi kanvas saat konten banyak */
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.ftb-wrap { flex-wrap: wrap; }
+.obj-editor-controls .floating-popover.docked {
+  position: static;
+  transform: none;
+  width: 100%;
+  margin-top: 2px;
+  box-shadow: none;
+  border: 1px solid #e5e7eb;
+}
+
+
+/* ===================== DOCK HALAMAN (bawah layar) ===================== */
+.builder-pages-dock {
+  height: 118px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* mulai SETELAH rail ikon kiri (60px), bukan dari tepi viewport */
+  padding: 12px 20px 12px 76px; /* dioverride inline (dinamis) */
+  transition: padding-left .25s ease;
+}
+/* Fallback centering yang tetap bisa scroll saat kartu banyak:
+   pseudo margin-auto mendorong grup ke tengah saat ada ruang,
+   dan menyusut normal saat konten overflow. */
+.builder-pages-dock::before,
+.builder-pages-dock::after {
+  content: '';
+  margin: auto;
+}
+.page-card {
+  position: relative;
+  flex-shrink: 0;
+  width: 148px;
+  padding: 6px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .15s;
+}
+.page-card:hover { background: #f3f4f6; }
+.page-card.active { border-color: var(--bx-accent-dim); background: var(--bx-accent-tint); }
+.page-card:focus-visible { outline: 2px solid var(--bx-accent-dim); outline-offset: 2px; }
+.page-thumb-window {
+  width: 136px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  pointer-events: none;
+}
+.page-thumb-stage { transform-origin: top left; pointer-events: none; }
+.page-thumb-stage * { pointer-events: none !important; }
+.page-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #374151;
+}
+.page-num {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #e5e7eb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.page-card.active .page-num { background: var(--bx-accent-deep); color: #fff; }
+.page-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.page-card-input {
+  width: 100%;
+  height: 20px;
+  font-size: 11px;
+  border: 1px solid #4f46e5;
+  border-radius: 4px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  outline: none;
+}
+.page-card-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 106px;
+  border-style: dashed;
+  border-color: #9ca3af;
+  background: transparent;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+}
+.page-card-add:hover { background: var(--bx-accent-tint); color: var(--bx-accent-deep); border-color: var(--bx-accent-dim); }
+
+.page-mode-badge {
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-left: auto;
+  line-height: 1.2;
+  transition: opacity .15s, transform .1s;
+  flex-shrink: 0;
+}
+.page-mode-badge:hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+.page-mode-badge.mode-participant {
+  background: #10b981;
+  color: #ffffff;
+}
+.page-mode-badge.mode-admin {
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+/* Action buttons on page card */
+.page-card-actions {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+}
+.page-card:hover .page-card-actions,
+.page-card:focus-within .page-card-actions {
+  display: inline-flex;
+}
+
+.page-card-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform .15s, background .15s;
+}
+.page-card-btn:hover {
+  transform: scale(1.15);
+}
+.page-card-dup {
+  background: #3b82f6;
+  color: #ffffff;
+}
+.page-card-dup:hover {
+  background: #2563eb;
+}
+.page-card-delete {
+  background: #ef4444;
+  color: #ffffff;
+}
+.page-card-delete:hover {
+  background: #dc2626;
+}
+
+/* Guard toast / notice */
+.builder-toast {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.2);
+  z-index: 9999;
+  animation: slideUpFade .2s ease-out;
+}
+.builder-toast.warning {
+  background: #7c2d12;
+  border: 1px solid #ea580c;
+}
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+
+/* ===================== OBJ EDITOR CONTROLS (sidebar) ===================== */
+.obj-editor-controls { display: flex; flex-direction: column; gap: 10px; }
+.ctl-box {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ctl-row { display: flex; align-items: center; gap: 6px; }
+.ctl-label {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+.ctl-value {
+  min-width: 34px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+}
+.ftb-swatch.lg { width: 26px; height: 26px; border-radius: 8px; }
+.ctl-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.ctl-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+}
+.ctl-action:hover { background: #f3f4f6; }
+.ctl-action.active { background: var(--bx-accent-tint); border-color: var(--bx-accent-border); color: var(--bx-accent-deep); }
+.ctl-action.danger:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+
+/* ===================== TEXT EXTRAS & ANIMASI ===================== */
+.el-text-editing {
+  outline: 2px dashed #4f46e5 !important;
+  outline-offset: 2px;
+  cursor: text;
+  min-height: 1em;
+}
+.obj-editor-controls .ctl-select,
+.ctl-select {
+  flex: 1;
+  height: 30px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #fff;
+  color: #111827;
+  padding: 0 6px;
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.ctl-number {
+  width: 52px;
+  height: 28px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: center;
+  padding: 0 4px;
+}
+.ctl-box-title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #6b7280;
+}
+.ctl-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #374151;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.ctl-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  margin: 4px 0 6px 26px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+.ctl-layer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.ctl-align-group { gap: 4px; }
+
+/* Keyframes animasi kemunculan objek (preview & publik) */
+@keyframes racikFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes racikSlide { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: none; } }
+@keyframes racikZoom { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+@keyframes racikBounce {
+  0% { opacity: 0; transform: translateY(-30px); }
+  60% { opacity: 1; transform: translateY(8px); }
+  80% { transform: translateY(-4px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes racikPop {
+  0% { opacity: 0; transform: scale(.5); }
+  70% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.racik-anim-fade { animation: racikFade .6s ease-out both; }
+.racik-anim-slide { animation: racikSlide .6s ease-out both; }
+.racik-anim-zoom { animation: racikZoom .55s ease-out both; }
+.racik-anim-bounce { animation: racikBounce .8s ease-out both; }
+.racik-anim-pop { animation: racikPop .5s ease-out both; }
+
+/* ===================== DRAG OBJEK (pointer kustom) ===================== */
+.canvas-element { cursor: move; }
+.canvas-element:active { cursor: move; }
+.canvas-element .el-text,
+.canvas-element .el-title,
+.canvas-element .el-subtitle,
+.canvas-element .el-link {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ===================== RESIZE HANDLES KUSTOM (4 sudut) ===================== */
+.rz-h {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border: 2px solid #4f46e5;
+  border-radius: 50%;
+  z-index: 20;
+}
+.rz-h:hover { transform: scale(1.25); }
+.rz-nw { top: -6px; left: -6px; cursor: nwse-resize; }
+.rz-ne { top: -6px; right: -6px; cursor: nesw-resize; }
+.rz-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+.rz-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+
+.selected-active {
+    outline: 2px solid #10b981 !important;
+    outline-offset: 2px !important;
+}
+/* --- Fix Layout Layout --- */
+
+.toolbar { display: flex !important; align-items: center !important; justify-content: space-between !important; height: 60px !important; padding: 0 16px; }
+
+.canva-sidebar { position: fixed !important; top: 60px !important; left: 0 !important; bottom: 0 !important; height: calc(100vh - 60px) !important; z-index: 900 !important; }
+
+.toolbar-left, .toolbar-center, .toolbar-right { display: flex !important; align-items: center !important; gap: 10px !important; }
+
+
+/* ===================== AKSESIBILITAS GERAKAN =====================
+   Pengguna yang menyalakan "reduce motion" di OS tetap dapat perubahan
+   status (opacity), tapi tanpa slide/scale yang memicu mual.
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .canva-panel-animate,
+  .canva-panel-body,
+  .canva-panel-body > * {
+    animation-duration: .01ms !important;
+    animation-delay: 0ms !important;
+  }
+
+  .canva-panel {
+    transition: opacity .12s linear;
+  }
+
+  .canvas-edge-handle,
+  .event-component-card,
+  .event-component-icon,
+  .canva-rail-btn svg {
+    transition: none;
+  }
+
+  .event-component-card:hover {
+    transform: none;
+  }
+}
+
+/* ===================== TOOLBAR (NAVBAR BUILDER) =====================
+   Chrome gelap hijau, sebaris dengan rail kiri dan dashboard. Kontrol di
+   dalamnya sebelumnya tanpa CSS sama sekali (memakai tampilan bawaan
+   browser), jadi di sini sekalian diberi gaya yang terbaca di latar gelap.
+   ==================================================================== */
+.toolbar {
+  background: var(--bx-chrome);
+  border-bottom: 1px solid var(--bx-chrome-line);
+  color: var(--bx-chrome-text);
+  position: relative;
+  z-index: 700;
+}
+
+.toolbar .page-title-input {
+  min-width: 220px;
+  padding: 8px 12px;
+  border: 1px solid var(--bx-chrome-line);
+  border-radius: 8px;
+  background: var(--bx-chrome-2);
+  color: var(--bx-chrome-text-hi);
+  font-size: 14px;
+  font-weight: 600;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.toolbar .page-title-input::placeholder {
+  color: var(--bx-chrome-muted);
+}
+
+.toolbar .page-title-input:hover {
+  border-color: var(--bx-accent-dim);
+}
+
+.toolbar .page-title-input:focus {
+  outline: none;
+  border-color: var(--bx-accent);
+  box-shadow: 0 0 0 3px var(--bx-accent-soft);
+}
+
+.toolbar .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bx-chrome-text);
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, transform .18s var(--bx-ease);
+}
+
+.toolbar .icon-btn:hover:not(.disabled) {
+  background: var(--bx-chrome-3);
+  color: var(--bx-chrome-text-hi);
+}
+
+.toolbar .icon-btn:active:not(.disabled) {
+  transform: scale(.94);
+}
+
+.toolbar .icon-btn.disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.toolbar .icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.toolbar .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border: 1px solid var(--bx-chrome-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bx-chrome-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.toolbar .btn-ghost:hover {
+  background: var(--bx-accent-soft);
+  border-color: var(--bx-accent-dim);
+  color: var(--bx-accent);
+}
+
+.toolbar .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--bx-accent);
+  color: #0a0e0a;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .18s ease, box-shadow .22s var(--bx-ease), transform .18s var(--bx-ease);
+}
+
+.toolbar .btn-primary:hover {
+  background: var(--bx-accent-dim);
+  box-shadow: 0 4px 14px var(--bx-accent-glow);
+}
+
+.toolbar .btn-primary:active {
+  transform: translateY(1px);
+}
+
+.toolbar .save-status {
+  font-size: 12px;
+  color: var(--bx-chrome-muted);
+  white-space: nowrap;
+}
+
+.toolbar .save-status.saving {
+  color: var(--bx-accent-dim);
+}
+
+.toolbar .save-status.saved {
+  color: var(--bx-accent);
+}
+
+.toolbar .save-status.error {
+  color: var(--bx-danger);
+}
+
+/* Pemisah dan grup device-preview di dalam toolbar gelap */
+.toolbar .toolbar-divider {
+  background: var(--bx-chrome-line) !important;
+}
+
+.toolbar .device-preview-nav {
+  border-left-color: var(--bx-chrome-line);
+}
+
+.toolbar .device-preview-btn {
+  color: var(--bx-chrome-text);
+}
+
+.toolbar .device-preview-btn:hover {
+  background: var(--bx-chrome-3);
+  color: var(--bx-chrome-text-hi);
+}
+
+/* Toggle Admin / Peserta */
+.toolbar .view-mode-toggle {
+  background: var(--bx-chrome-2) !important;
+  border: 1px solid var(--bx-chrome-line);
+}
+
+.toolbar .view-mode-btn {
+  color: var(--bx-chrome-text) !important;
+  transition: background .18s ease, color .18s ease;
+}
+
+.toolbar .view-mode-btn:hover:not(.active) {
+  color: var(--bx-chrome-text-hi) !important;
+}
+
+.toolbar .view-mode-btn.active {
+  background-color: var(--bx-accent) !important;
+  color: #0a0e0a !important;
+}
+
+/* ===================== SHELL SETINGGI VIEWPORT =====================
+   Sebelumnya .builder dan .builder-body tidak dibatasi tinggi, jadi shell
+   ikut memanjang mengikuti kanvas dan yang tergulir adalah SELURUH dokumen —
+   toolbar dan rail kiri ikut hilang saat digulir ke bawah.
+
+   Sekarang shell dikunci setinggi layar dan hanya .canvas-viewport yang
+   menggulir (ia memang sudah punya overflow:auto). Rail, panel, toolbar, dan
+   dock halaman tetap di tempatnya.
+   =================================================================== */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.builder {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* dvh mengikuti bilah alamat browser mobile yang muncul-hilang */
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.toolbar {
+  flex: 0 0 auto;
+}
+
+.builder-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.builder-center {
+  height: 100%;
+  min-height: 0;
+}
+
+.canvas-viewport {
+  min-height: 0;
+}
+
+.builder-pages-dock {
+  flex: 0 0 auto;
+}
+
+/* ===================== LATAR RUANG KERJA BUILDER =====================
+   Gradient yang sama dengan halaman lain dipasang di body dan di area sekitar
+   kanvas. `.canvas-page` sengaja TIDAK ikut gelap: itu lembar desain milik
+   pengguna — kalau latarnya gelap, persepsi warna saat mendesain jadi meleset.
+   ==================================================================== */
+body {
+  background: var(--bg-gradient, radial-gradient(ellipse 80% 50% at 0% 0%, #3F4A34 0%, #0A0E0A 100%));
+  background-attachment: fixed;
+}
+
+.canvas-viewport {
+  background: var(--bg-gradient, radial-gradient(ellipse 80% 50% at 0% 0%, #3F4A34 0%, #0A0E0A 100%));
+  background-attachment: fixed;
+}
+
+/* ===================== TOMBOL PUBLISH SUBDOMAIN ===================== */
+.toolbar .btn-publish {
+  gap: 6px;
+}
+
+.toolbar .btn-publish svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.toolbar .btn-publish:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+/* Event sudah live: aksen hijau diganti abu netral supaya jelas beda
+   dari "belum publish" — tetap menonjol, tapi tidak lagi seolah CTA baru. */
+.toolbar .btn-publish.is-published {
+  background: var(--bx-chrome-3);
+  color: var(--bx-chrome-text-hi);
+  border: 1px solid var(--bx-chrome-line);
+}
+
+.toolbar .btn-publish.is-published:hover {
+  background: var(--bx-chrome-2);
+  box-shadow: none;
+}

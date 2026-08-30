@@ -1,0 +1,7 @@
+<svg width="300" height="280" viewBox="0 0 300 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="150,10 250,70 200,220 100,220 50,70" fill="#12372a" opacity="0.5"/>
+    <polygon points="150,25 235,75 190,200 110,200 65,75" fill="#436850" opacity="0.4"/>
+    <polygon points="150,45 210,80 175,170 125,170 90,80" fill="#22c55e" opacity="0.3"/>
+    <circle cx="150" cy="110" r="20" fill="#4ade80" opacity="0.25"/>
+    <circle cx="150" cy="140" r="25" fill="#16a34a" opacity="0.2"/>
+</svg>
