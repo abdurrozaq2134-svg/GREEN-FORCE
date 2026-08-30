@@ -1,11 +1,10 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BuilderController;
-use App\Http\Controllers\Api\FormController;
+use App\Models\ActivityLog;
+use Illuminate\Support\Facades\Route;
 
 // Login Google — path utama sesuai konvensi /auth/google/redirect;
 // path lama /auth/google tetap dialihkan agar link lama tidak mati.
@@ -19,6 +18,7 @@ Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
+
     return view('main page.landing');
 })->name('landing');
 
@@ -32,10 +32,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/builder/save', [BuilderController::class, 'save'])->name('builder.save');
     Route::post('/builder/{eventPage}/publish', [BuilderController::class, 'publish'])->name('builder.publish');
     Route::post('/builder/{eventPage}/unpublish', [BuilderController::class, 'unpublish'])->name('builder.unpublish');
+    Route::get('/e/{eventPage:slug}/admin', [BuilderController::class, 'showAdmin'])->name('builder.public.admin');
 
     // Log aktivitas asli untuk panel DIAGNOSTIK SISTEM
     Route::get('/api/activity-log', function () {
-        $logs = \App\Models\ActivityLog::where('user_id', auth()->id())
+        $logs = ActivityLog::where('user_id', auth()->id())
             ->latest()
             ->limit(15)
             ->get(['description', 'status', 'created_at']);

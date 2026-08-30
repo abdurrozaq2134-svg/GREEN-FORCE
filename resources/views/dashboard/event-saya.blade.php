@@ -105,6 +105,9 @@
                                     @php($eventUrls = $page->publicUrls())
                                     <a href="{{ $eventUrls['subdomain'] ?? $eventUrls['path'] }}" target="_blank" rel="noopener" class="table__action-btn">Lihat</a>
                                 @endif
+                                {{-- Link Panitia tidak mensyaratkan publish -- EO boleh cek halaman
+                                     admin (mis. Daftar Peserta) sebelum event live. --}}
+                                <a href="{{ route('builder.public.admin', $page) }}" target="_blank" rel="noopener" class="table__action-btn" title="Halaman khusus panitia (wajib login)">Panitia</a>
                                 <form action="{{ route('events.destroy', $page) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus event ini?');" style="display:inline;">
                                     @csrf
                                     @method('DELETE')

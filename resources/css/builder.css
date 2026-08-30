@@ -206,7 +206,11 @@
 
 .canva-panel {
   width: 260px;
-  background: #ffffff;
+  /* Tetap terang (lihat catatan token warna di atas -- panel harus terang
+     supaya EO tidak salah persepsi warna saat mendesain), tapi pakai tint
+     hijau brand alih-alih putih polos supaya tidak jomplang dengan rail +
+     toolbar gelap di sebelahnya. */
+  background: var(--bx-accent-tint);
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
@@ -1592,26 +1596,90 @@
 }
 .ctl-align-group { gap: 4px; }
 
-/* Keyframes animasi kemunculan objek (preview & publik) */
+/* ===================== KEYFRAMES ANIMASI OBJEK =====================
+   Dipakai kanvas builder, panel Animasi (pratinjau live), DAN halaman
+   publik. Cerminan persis dari blok yang sama di
+   resources/views/builder/public.blade.php -- kalau ubah satu, ubah juga
+   yang lain. Nama keyframe adalah kontrak antara sini dan
+   AnimationPresets.js (field `keyframe` tiap preset).
+
+   Durasi/delay/loop TIDAK dibakar di sini -- semuanya dipasang lewat
+   inline style per objek (lihat animationRuntimeStyle() di
+   AnimationPresets.js), supaya satu keyframe bisa dipakai banyak objek
+   dengan pengaturan berbeda-beda.
+   ==================================================================== */
+
+/* ---- Masuk (Entrance) ---- */
 @keyframes racikFade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes racikSlide { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: none; } }
+@keyframes racikSlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes racikSlideDown { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes racikSlideLeft { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes racikSlideRight { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes racikZoom { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
 @keyframes racikBounce {
   0% { opacity: 0; transform: translateY(-30px); }
   60% { opacity: 1; transform: translateY(8px); }
   80% { transform: translateY(-4px); }
-  100% { opacity: 1; transform: none; }
+  100% { opacity: 1; transform: translateY(0); }
 }
 @keyframes racikPop {
   0% { opacity: 0; transform: scale(.5); }
   70% { opacity: 1; transform: scale(1.08); }
   100% { opacity: 1; transform: scale(1); }
 }
-.racik-anim-fade { animation: racikFade .6s ease-out both; }
-.racik-anim-slide { animation: racikSlide .6s ease-out both; }
-.racik-anim-zoom { animation: racikZoom .55s ease-out both; }
-.racik-anim-bounce { animation: racikBounce .8s ease-out both; }
-.racik-anim-pop { animation: racikPop .5s ease-out both; }
+@keyframes racikFlip {
+  from { opacity: 0; transform: perspective(400px) rotateX(80deg); }
+  to { opacity: 1; transform: perspective(400px) rotateX(0deg); }
+}
+@keyframes racikRotateIn {
+  from { opacity: 0; transform: rotate(-35deg) scale(.85); }
+  to { opacity: 1; transform: rotate(0) scale(1); }
+}
+
+/* ---- Perhatian (Attention) ---- */
+@keyframes racikPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes racikShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+@keyframes racikWobble {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(-6deg); }
+  30% { transform: rotate(5deg); }
+  45% { transform: rotate(-4deg); }
+  60% { transform: rotate(3deg); }
+  75% { transform: rotate(-2deg); }
+}
+@keyframes racikTada {
+  0%, 100% { transform: scale(1) rotate(0); }
+  10%, 20% { transform: scale(.9) rotate(-3deg); }
+  30%, 50%, 70%, 90% { transform: scale(1.1) rotate(3deg); }
+  40%, 60%, 80% { transform: scale(1.1) rotate(-3deg); }
+}
+@keyframes racikHeartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.15); }
+  40% { transform: scale(1); }
+  60% { transform: scale(1.15); }
+}
+@keyframes racikFlash {
+  0%, 100% { opacity: 1; }
+  25%, 75% { opacity: .2; }
+  50% { opacity: 1; }
+}
+
+/* ---- Keluar (Exit) ---- */
+@keyframes racikFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes racikSlideOutUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-24px); } }
+@keyframes racikSlideOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(24px); } }
+@keyframes racikZoomOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.7); } }
+@keyframes racikShrink { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0); } }
 
 /* ===================== DRAG OBJEK (pointer kustom) ===================== */
 .canvas-element { cursor: move; }
@@ -1943,4 +2011,488 @@ body {
 .toolbar .btn-publish.is-published:hover {
   background: var(--bx-chrome-2);
   box-shadow: none;
+}
+
+/* ===================== PANEL DEDICATED: ANIMASI =====================
+   Menggantikan seluruh body ObjectPropertyPanel selagi terbuka (lihat
+   showAnimPanel di EventBuilder.jsx) -- sidebar kiri yang sama, bukan
+   modal, dengan tombol back di baris pertama.
+   ==================================================================== */
+.anim-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.anim-panel-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 10px 6px 6px;
+  border: none;
+  background: transparent;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+.anim-panel-back:hover {
+  background: #f3f4f6;
+}
+
+/* Baris "Animasi" yang bisa diklik di panel properti utama */
+.anim-open-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.anim-open-label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.anim-open-value {
+  font-size: 12px;
+  color: #6b7280;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.anim-open-row svg {
+  width: 16px;
+  height: 16px;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* ---- Panggung pratinjau ---- */
+.anim-stage-box {
+  align-items: center;
+}
+
+.anim-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  border-radius: 10px;
+  background:
+    linear-gradient(45deg, #f3f4f6 25%, transparent 25%),
+    linear-gradient(-45deg, #f3f4f6 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f3f4f6 75%),
+    linear-gradient(-45deg, transparent 75%, #f3f4f6 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-color: #fafafa;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.anim-stage.is-waiting {
+  cursor: pointer;
+}
+
+.anim-stage-object {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.anim-stage-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(17, 24, 39, .55);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.anim-stage-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.anim-stage-caption {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* ---- Kategori + grid preset ---- */
+.anim-category-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.anim-category-tab {
+  flex: 1;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+
+.anim-category-tab.active {
+  background: #ffffff;
+  color: var(--bx-accent-deep, #4f46e5);
+  box-shadow: 0 1px 2px rgba(0,0,0,.08);
+}
+
+.anim-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.anim-preset-btn {
+  padding: 8px 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.anim-preset-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.anim-preset-btn.active {
+  background: var(--bx-accent-tint, #eef2ff);
+  border-color: var(--bx-accent-border, #c7d2fe);
+  color: var(--bx-accent-deep, #4f46e5);
+  font-weight: 700;
+}
+
+/* ---- Pengaturan (infinite / durasi / delay / trigger) ---- */
+.anim-prop-row {
+  justify-content: space-between;
+}
+
+.anim-prop-label {
+  font-size: 12px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.anim-prop-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.anim-prop-control input[type="number"] {
+  width: 56px;
+  height: 28px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.anim-prop-control select {
+  height: 28px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #fff;
+  color: #111827;
+  padding: 0 6px;
+  max-width: 150px;
+}
+
+.anim-unit {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.anim-trigger-hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9ca3af;
+}
+
+/* ===================== FIELD WARNA BENTUK: SOLID / GRADIENT =====================
+   Ditempel langsung di panel properti Bentuk (bukan popover/panel terpisah),
+   lihat GradientColorField.jsx.
+   ==================================================================== */
+.grad-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grad-mode-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.grad-mode-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+
+.grad-mode-btn.active {
+  background: #ffffff;
+  color: var(--bx-accent-deep, #4f46e5);
+  box-shadow: 0 1px 2px rgba(0,0,0,.08);
+}
+
+.grad-solid-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grad-solid-row input[type="color"],
+.grad-stop-row input[type="color"] {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.grad-preview {
+  height: 48px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.grad-stops {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grad-stop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grad-stop-row .ctl-value {
+  flex: 1;
+  text-align: left;
+}
+
+.grad-stop-remove {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.grad-stop-remove:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.grad-stop-remove:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.grad-angle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grad-angle-row input[type="range"] {
+  flex: 1;
+}
+
+/* ===================== FONT PICKER (214 font, bisa dicari) =====================
+   Ditempel langsung di panel properti Teks -- lihat FontPicker.jsx.
+   ==================================================================== */
+.font-picker {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.font-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.font-picker-trigger:hover {
+  border-color: #9ca3af;
+}
+
+.font-picker-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.font-picker-trigger svg {
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+.font-picker-panel {
+  margin-top: 6px;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
+
+.font-picker-search {
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.font-picker-search:focus {
+  outline: none;
+  border-color: var(--bx-accent-deep, #4f46e5);
+}
+
+.font-picker-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.font-picker-cat {
+  padding: 4px 9px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.font-picker-cat.active {
+  background: var(--bx-accent-tint, #eef2ff);
+  border-color: var(--bx-accent-border, #c7d2fe);
+  color: var(--bx-accent-deep, #4f46e5);
+}
+
+.font-picker-count {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+.font-picker-list {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.font-picker-item {
+  display: block;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #111827;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.font-picker-item:hover {
+  background: #f3f4f6;
+}
+
+.font-picker-item.active {
+  background: var(--bx-accent-tint, #eef2ff);
+  color: var(--bx-accent-deep, #4f46e5);
+  font-weight: 600;
+}
+
+.font-picker-empty {
+  padding: 12px 4px;
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
 }

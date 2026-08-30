@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\EventPage;
 use App\Models\FormField;
+use App\Support\DynamicFormTableService;
 use App\Support\FormFieldCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class BuilderController extends Controller
 {
@@ -29,7 +32,7 @@ class BuilderController extends Controller
             'pages' => json_encode($eventPage->pagesList()),
             'is_published' => $eventPage->is_published,
             'slug' => $eventPage->slug,
-            'urls' => $eventPage->publicUrls(),
+            'urls' => $this->publicUrlsWithAdmin($eventPage),
         ];
 
         return view('builder.index', ['page' => $page, 'pages' => $this->userPages()]);
@@ -49,17 +52,26 @@ class BuilderController extends Controller
             'pages' => 'nullable|array',
             'pages.*.id' => 'required|string',
             'pages.*.name' => 'required|string|max:255',
+            'pages.*.mode' => 'nullable|in:participant,admin',
             'pages.*.elements' => 'present|array',
         ]);
 
         // Normalisasi pages (multi-halaman). `elements` tetap disinkronkan
         // dengan halaman pertama untuk kompatibilitas render lama.
+        //
+        // `mode` WAJIB ikut disalin -- sebelumnya array_map ini hanya
+        // menyalin id/name/elements, jadi setiap save() diam-diam
+        // menghapus mode halaman (mis. halaman admin "Daftar Peserta").
+        // Efeknya: pagesList() balik menganggap semua halaman "participant"
+        // (fallback default), dan halaman admin jadi ikut terlihat di
+        // halaman publik peserta setelah save berikutnya.
         $pages = null;
-        if (!empty($validated['pages'])) {
+        if (! empty($validated['pages'])) {
             $pages = array_values(array_map(function ($p, $i) {
                 return [
                     'id' => $p['id'],
-                    'name' => $p['name'] !== '' ? $p['name'] : ('Halaman ' . ($i + 1)),
+                    'name' => $p['name'] !== '' ? $p['name'] : ('Halaman '.($i + 1)),
+                    'mode' => $p['mode'] ?? 'participant',
                     'elements' => array_values($p['elements']),
                 ];
             }, $validated['pages'], array_keys($validated['pages'])));
@@ -80,7 +92,7 @@ class BuilderController extends Controller
                 'pages' => $pages ?? $page->pages,
             ]);
 
-            \App\Models\ActivityLog::record(
+            ActivityLog::record(
                 'event.updated',
                 "Event \"{$validated['title']}\" diperbarui."
             );
@@ -93,7 +105,7 @@ class BuilderController extends Controller
                 'pages' => $pages,
             ]);
 
-            \App\Models\ActivityLog::record(
+            ActivityLog::record(
                 'event.created',
                 "Event baru \"{$validated['title']}\" dibuat."
             );
@@ -161,6 +173,9 @@ class BuilderController extends Controller
         FormField::where('event_page_id', $page->id)->delete();
         if ($rows) {
             FormField::insert($rows);
+
+            // Tabel fisik per-event (form_data_{id}) -- lihat DynamicFormTableService.
+            DynamicFormTableService::sync($page->id, FormField::where('event_page_id', $page->id)->get());
         }
     }
 
@@ -210,12 +225,49 @@ class BuilderController extends Controller
         return view('dashboard.event-saya', compact('pages'));
     }
 
-    // Halaman publik hasil publish (diakses via subdomain nanti)
+    /**
+     * Halaman publik yang dilihat peserta (path /e/{slug} atau subdomain).
+     *
+     * Hanya halaman ber-mode "peserta" yang pernah dikirim ke browser di
+     * sini — halaman ber-mode "admin" (mis. berisi Daftar Peserta) disaring
+     * di SERVER, bukan cuma disembunyikan lewat CSS/JS. Siapa pun bisa buka
+     * DevTools; markup yang tidak pernah dikirim tidak bisa dibongkar.
+     */
     public function showPublic(string $slug)
     {
         $page = EventPage::where('slug', $slug)
             ->where('is_published', true)
             ->firstOrFail();
+
+        return $this->renderEventPage($page, participantsOnly: true);
+    }
+
+    /**
+     * Link khusus panitia: menampilkan SEMUA halaman apa adanya (termasuk
+     * yang ber-mode admin), masing-masing sesuai mode yang dirancang EO di
+     * builder — tidak memaksa semuanya jadi admin seperti mekanisme
+     * `?preview=1&view=admin` lama (sudah dihapus; siapa pun yang tahu URL-
+     * nya bisa memakainya tanpa autentikasi apa pun).
+     *
+     * Tidak mensyaratkan event sudah terbit, supaya EO bisa mengecek
+     * halaman admin (mis. Daftar Peserta) sebelum publish.
+     */
+    public function showAdmin(EventPage $eventPage)
+    {
+        $this->authorizeOwner($eventPage);
+
+        return $this->renderEventPage($eventPage, participantsOnly: false);
+    }
+
+    private function renderEventPage(EventPage $page, bool $participantsOnly): View
+    {
+        $allPages = $page->pagesList();
+        if ($participantsOnly) {
+            $allPages = array_values(array_filter(
+                $allPages,
+                fn ($pg) => ($pg['mode'] ?? 'participant') !== 'admin'
+            ));
+        }
 
         // Konteks peserta: dipakai elemen Form (gerbang login Google) dan
         // Tombol Bayar untuk memutuskan apa yang ditampilkan.
@@ -226,12 +278,13 @@ class BuilderController extends Controller
 
         return view('builder.public', [
             'page' => $page,
-            'allPages' => $page->pagesList(),
+            'allPages' => $allPages,
+            'isAdminView' => ! $participantsOnly,
             'viewer' => $viewer ? [
                 'id' => $viewer->id,
                 'name' => $viewer->name,
                 'email' => $viewer->email,
-                'avatar' => $viewer->avatar,
+                'avatar' => $viewer->avatarUrl(),
             ] : null,
             'viewerSubmission' => $submission ? [
                 'id' => $submission->id,
@@ -263,7 +316,7 @@ class BuilderController extends Controller
         $eventPage->save();
 
         if (! $wasPublished) {
-            \App\Models\ActivityLog::record(
+            ActivityLog::record(
                 'event.published',
                 "Event \"{$eventPage->title}\" dipublikasikan."
             );
@@ -273,7 +326,7 @@ class BuilderController extends Controller
             'success' => true,
             'message' => $wasPublished ? 'Event sudah live — tautan tetap sama.' : 'Event berhasil dipublikasikan.',
             'slug' => $eventPage->slug,
-            'urls' => $eventPage->publicUrls(),
+            'urls' => $this->publicUrlsWithAdmin($eventPage),
         ]);
     }
 
@@ -285,7 +338,7 @@ class BuilderController extends Controller
 
         $eventPage->update(['is_published' => false]);
 
-        \App\Models\ActivityLog::record(
+        ActivityLog::record(
             'event.unpublished',
             "Event \"{$eventPage->title}\" ditarik dari publikasi."
         );
@@ -316,7 +369,7 @@ class BuilderController extends Controller
 
         $deleted = EventPage::whereIn('id', $owned)->delete();
 
-        \App\Models\ActivityLog::record(
+        ActivityLog::record(
             'event.bulk_deleted',
             "{$deleted} event dihapus secara massal."
         );
@@ -330,11 +383,29 @@ class BuilderController extends Controller
     {
         $this->authorizeOwner($eventPage);
         $eventPage->delete();
-        \App\Models\ActivityLog::record(
+        ActivityLog::record(
             'event.deleted',
             "Event \"{$eventPage->title}\" dihapus."
         );
+
         return redirect()->route('events.index')->with('success', 'Event berhasil dihapus.');
+    }
+
+    /**
+     * Tautan publicUrls() model + link khusus panitia. Sengaja dibangun di
+     * controller, bukan ikut masuk EventPage::publicUrls() -- "siapa boleh
+     * lihat" adalah urusan auth/route, dan publicUrls() dipakai juga oleh
+     * GoogleController untuk redirect peserta yang semestinya tidak pernah
+     * tahu soal link admin.
+     *
+     * @return array{path: string, subdomain: string|null, admin: string}
+     */
+    private function publicUrlsWithAdmin(EventPage $page): array
+    {
+        return array_merge(
+            $page->publicUrls(),
+            ['admin' => route('builder.public.admin', $page)],
+        );
     }
 
     private function authorizeOwner(EventPage $page): void

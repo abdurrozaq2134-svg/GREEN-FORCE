@@ -125,7 +125,12 @@ test('publish exposes a subdomain url when EVENT_SUBDOMAIN_HOST is configured', 
 
     $response = $this->actingAs($eo)->postJson(route('builder.publish', $page));
 
-    expect($response->json('urls.subdomain'))->toBe("http://{$page->slug}.racikevent.test");
+    // APP_URL di .env testing punya port (http://localhost:8000) --
+    // publicUrls() menyertakannya karena bukan port default 80/443,
+    // kalau tidak link yang dibuka pengguna mengarah ke port yang salah.
+    $port = parse_url(config('app.url'), PHP_URL_PORT);
+    $expectedPort = $port ? ":{$port}" : '';
+    expect($response->json('urls.subdomain'))->toBe("http://{$page->slug}.racikevent.test{$expectedPort}");
 });
 
 test('publish omits the subdomain url when EVENT_SUBDOMAIN_HOST is not configured', function () {

@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\EventPage;
 use App\Models\FormField;
 use App\Models\FormSubmission;
+use App\Support\DynamicFormTableService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class FormController extends Controller
@@ -73,7 +73,7 @@ class FormController extends Controller
                     break;
             }
 
-            if (!empty($fieldRules)) {
+            if (! empty($fieldRules)) {
                 $rules["data.{$key}"] = $fieldRules;
             }
 
@@ -101,6 +101,10 @@ class FormController extends Controller
             'status' => FormSubmission::STATUS_PENDING,
         ]);
 
+        // Paralel dengan form_submissions.data (JSON): tabel fisik
+        // form_data_{event_page_id} milik event ini sendiri.
+        DynamicFormTableService::insertSubmission($eventPage->id, $submission->id, Auth::id(), $castedData);
+
         return response()->json([
             'success' => true,
             'message' => 'Pendaftaran berhasil.',
@@ -117,7 +121,7 @@ class FormController extends Controller
         $this->authorizeOwner($eventPage);
 
         $submissions = $eventPage->formSubmissions()
-            ->with('user:id,name,email,avatar')
+            ->with(['user:id,name,email', 'user.googleAccount:id,user_id,avatar'])
             ->latest()
             ->paginate(20);
 
@@ -130,7 +134,7 @@ class FormController extends Controller
                         'id' => $s->user->id,
                         'name' => $s->user->name,
                         'email' => $s->user->email,
-                        'avatar' => $s->user->avatar,
+                        'avatar' => $s->user->avatarUrl(),
                     ] : null,
                     'data' => $s->data,
                     'status' => $s->status,

@@ -34,9 +34,10 @@ class EventPage extends Model
     // untuk event lama yang belum punya `pages`.
     public function pagesList(): array
     {
-        if (!empty($this->pages) && is_array($this->pages)) {
+        if (! empty($this->pages) && is_array($this->pages)) {
             return $this->pages;
         }
+
         return [
             [
                 'id' => 'page_1',
@@ -74,13 +75,19 @@ class EventPage extends Model
 
     public function isQuotaFull(): bool
     {
-        if (!$this->quota) return false;
+        if (! $this->quota) {
+            return false;
+        }
+
         return $this->formSubmissions()->count() >= $this->quota;
     }
 
     public function remainingQuota(): int
     {
-        if (!$this->quota) return PHP_INT_MAX;
+        if (! $this->quota) {
+            return PHP_INT_MAX;
+        }
+
         return max(0, $this->quota - $this->formSubmissions()->count());
     }
 
@@ -128,7 +135,7 @@ class EventPage extends Model
         $i = 1;
 
         while (static::where('slug', $slug)->exists()) {
-            $slug = $base . '-' . $i;
+            $slug = $base.'-'.$i;
             $i++;
         }
 
@@ -148,8 +155,20 @@ class EventPage extends Model
         $host = config('events.subdomain_host');
         $subdomain = null;
         if ($host) {
-            $scheme = str_starts_with(config('app.url'), 'https://') ? 'https' : 'http';
-            $subdomain = "{$scheme}://{$this->slug}.{$host}";
+            $app = parse_url(config('app.url'));
+            $scheme = ($app['scheme'] ?? 'http') === 'https' ? 'https' : 'http';
+
+            // Port APP_URL (mis. :8000 di lokal) harus ikut disertakan —
+            // Laravel mencocokkan Route::domain() dengan host TANPA port
+            // (Symfony Request::getHost() memangkasnya secara internal),
+            // jadi ini aman untuk routing. Tapi link yang dibuka pengguna
+            // butuh port eksplisit, kalau tidak browser mengarah ke :80
+            // yang tidak ada apa-apa di server dev lokal.
+            $port = $app['port'] ?? null;
+            $isDefaultPort = $port === null || ($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80);
+            $portSuffix = $isDefaultPort ? '' : ":{$port}";
+
+            $subdomain = "{$scheme}://{$this->slug}.{$host}{$portSuffix}";
         }
 
         return ['path' => $path, 'subdomain' => $subdomain];

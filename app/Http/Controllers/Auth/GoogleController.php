@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\EventPage;
+use App\Models\GoogleAccount;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,29 +37,28 @@ class GoogleController extends Controller
     {
         $googleUser = Socialite::driver('google')->stateless()->user();
 
-        $user = User::where('google_id', $googleUser->getId())
-            ->orWhere('email', $googleUser->getEmail())
-            ->first();
+        // Data akun Google (google_id, avatar) punya tabelnya sendiri
+        // (google_accounts) -- users tetap satu sumber identitas untuk semua
+        // metode login, terlepas dari itu daftar manual atau lewat Google.
+        $user = GoogleAccount::where('google_id', $googleUser->getId())->first()?->user
+            ?? User::where('email', $googleUser->getEmail())->first();
 
-        if ($user) {
-            // Kalau user sudah ada tapi belum punya google_id, tautkan
-            if (!$user->google_id) {
-                $user->update([
-                    'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
-                ]);
-            }
-        } else {
+        if (! $user) {
             // Email dari Google otomatis dianggap terverifikasi
             $user = User::create([
                 'name' => $googleUser->getName(),
                 'email' => $googleUser->getEmail(),
-                'google_id' => $googleUser->getId(),
-                'avatar' => $googleUser->getAvatar(),
                 'password' => Hash::make(Str::random(24)),
                 'email_verified_at' => now(),
             ]);
         }
+
+        // updateOrCreate: user lama yang login Google pertama kali ikut
+        // tertaut di sini, bukan cuma user yang baru dibuat di atas.
+        GoogleAccount::updateOrCreate(
+            ['user_id' => $user->id],
+            ['google_id' => $googleUser->getId(), 'avatar' => $googleUser->getAvatar()],
+        );
 
         Auth::login($user);
 

@@ -566,11 +566,22 @@ export function isScopeLocked(type) {
     return PARTICIPANT_LOCKED_TYPES.includes(type) || ADMIN_LOCKED_TYPES.includes(type);
 }
 
-/** Scope untuk objek yang BARU ditambahkan, mengikuti tab mode yang aktif. */
-export function resolveScopeForNew(type, activeMode) {
+/**
+ * Scope untuk objek yang BARU ditambahkan.
+ *
+ * Dulu ikut tab mode yang sedang aktif di builder ("admin"/"participant"),
+ * tapi tab itu default-nya "admin" -- jadi setiap elemen biasa (teks,
+ * bentuk, unggahan) yang ditambahkan sebelum EO sadar & pindah ke tab
+ * "Peserta" otomatis ke-lock scope="admin" dan hilang total dari halaman
+ * publik saat diterbitkan, walau di kanvas builder terlihat normal (bug
+ * yang tidak kelihatan sampai publish). Elemen umum sekarang selalu mulai
+ * di "both" -- EO tetap bisa membatasi scope-nya manual lewat selector di
+ * panel properti kalau memang perlu.
+ */
+export function resolveScopeForNew(type) {
     if (PARTICIPANT_LOCKED_TYPES.includes(type)) return "participant";
     if (ADMIN_LOCKED_TYPES.includes(type)) return "admin";
-    return activeMode === "admin" ? "admin" : "participant";
+    return "both";
 }
 
 /**

@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $page->title ?? 'Event' }} — Event Page</title>
-    @vite(['resources/js/builder.jsx'])
+    {{--
+        Halaman publik ini murni vanilla JS (skrip di bawah), bukan React --
+        sebelumnya ikut memuat @vite(['resources/js/builder.jsx']) (bundle
+        editor React 266KB+ + CSS-nya). Karena elemen di sini pun dikasih
+        class "canvas-element" yang sama seperti kanvas builder, CSS bundle
+        itu ikut kepakai di sini: cursor:move di semua elemen dan teks jadi
+        tidak bisa di-select sama sekali oleh pengunjung -- bukan cuma boros,
+        tapi bikin halaman publik kelihatan/berperilaku seperti mode edit.
+    --}}
     <style>
         /* Public page responsive styles */
         * { box-sizing: border-box; }
@@ -123,27 +131,75 @@
         .el-sponsor a { color: #4f46e5; text-decoration: none; font-weight: 500; font-size: clamp(14px, 2.5vw, 18px); }
         .el-sponsor a:hover { text-decoration: underline; }
         
-                /* Animasi kemunculan elemen */
+                /* ===================== KEYFRAMES ANIMASI OBJEK =====================
+           Cerminan PERSIS dari blok yang sama di resources/css/builder.css —
+           kalau ubah satu, ubah juga yang lain. Durasi/delay/loop tidak
+           dibakar di sini, dipasang lewat inline style per objek saat
+           trigger-nya jalan (lihat racikApplyAnimStyle() di script bawah). */
         @keyframes racikFade { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes racikSlide { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: none; } }
+        @keyframes racikSlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes racikSlideDown { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes racikSlideLeft { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes racikSlideRight { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes racikZoom { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
         @keyframes racikBounce {
           0% { opacity: 0; transform: translateY(-30px); }
           60% { opacity: 1; transform: translateY(8px); }
           80% { transform: translateY(-4px); }
-          100% { opacity: 1; transform: none; }
+          100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes racikPop {
           0% { opacity: 0; transform: scale(.5); }
           70% { opacity: 1; transform: scale(1.08); }
           100% { opacity: 1; transform: scale(1); }
         }
-        .canvas-element[data-anim] { opacity: 0; }
-        .canvas-element.anim-play[data-anim='fade'] { opacity: 1; animation: racikFade .6s ease-out both; }
-        .canvas-element.anim-play[data-anim='slide'] { opacity: 1; animation: racikSlide .6s ease-out both; }
-        .canvas-element.anim-play[data-anim='zoom'] { opacity: 1; animation: racikZoom .55s ease-out both; }
-        .canvas-element.anim-play[data-anim='bounce'] { opacity: 1; animation: racikBounce .8s ease-out both; }
-        .canvas-element.anim-play[data-anim='pop'] { opacity: 1; animation: racikPop .5s ease-out both; }
+        @keyframes racikFlip {
+          from { opacity: 0; transform: perspective(400px) rotateX(80deg); }
+          to { opacity: 1; transform: perspective(400px) rotateX(0deg); }
+        }
+        @keyframes racikRotateIn {
+          from { opacity: 0; transform: rotate(-35deg) scale(.85); }
+          to { opacity: 1; transform: rotate(0) scale(1); }
+        }
+        @keyframes racikPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+        @keyframes racikShake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+        }
+        @keyframes racikWobble {
+          0%, 100% { transform: rotate(0); }
+          15% { transform: rotate(-6deg); }
+          30% { transform: rotate(5deg); }
+          45% { transform: rotate(-4deg); }
+          60% { transform: rotate(3deg); }
+          75% { transform: rotate(-2deg); }
+        }
+        @keyframes racikTada {
+          0%, 100% { transform: scale(1) rotate(0); }
+          10%, 20% { transform: scale(.9) rotate(-3deg); }
+          30%, 50%, 70%, 90% { transform: scale(1.1) rotate(3deg); }
+          40%, 60%, 80% { transform: scale(1.1) rotate(-3deg); }
+        }
+        @keyframes racikHeartbeat {
+          0%, 100% { transform: scale(1); }
+          25% { transform: scale(1.15); }
+          40% { transform: scale(1); }
+          60% { transform: scale(1.15); }
+        }
+        @keyframes racikFlash { 0%, 100% { opacity: 1; } 25%, 75% { opacity: .2; } 50% { opacity: 1; } }
+        @keyframes racikFadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes racikSlideOutUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-24px); } }
+        @keyframes racikSlideOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(24px); } }
+        @keyframes racikZoomOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.7); } }
+        @keyframes racikShrink { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0); } }
+
+        /* Elemen bermode "masuk" (entrance) disembunyikan sampai animasinya
+           benar-benar jalan — "perhatian" dan "keluar" harus tetap kelihatan
+           dari awal (animasinya sendiri yang menutup di akhir untuk exit). */
+        .canvas-element[data-anim-category="entrance"] { opacity: 0; }
 /* Mobile stacking */
         @media (max-width: 767px) {
             .public-page { padding: 24px 16px; min-height: 100vh; }
@@ -196,6 +252,11 @@
             submitUrl: @json(route('api.form.submit', ['eventPage' => $page->id])),
             participantsUrl: @json(route('api.form.participants', ['eventPage' => $page->id])),
             participantCount: null,
+            // true hanya untuk link /e/{slug}/admin (auth+ownership di server).
+            // Dipakai buat banner penanda -- BUKAN kontrol keamanan; filtering
+            // sebenarnya sudah terjadi di server lewat $allPages yang dikirim.
+            isAdminView: @json($isAdminView ?? false),
+            participantUrl: @json(route('builder.public', $page->slug)),
         };
         const isLoggedIn = () => !!(RACIK.viewer && RACIK.viewer.id);
 
@@ -205,16 +266,7 @@
             const rootEl = document.getElementById('public-pages-root');
 
 
-            // Support preview mode via query params: ?preview=1&view=participant|admin
-            const urlParams = new URLSearchParams(window.location.search);
-            const isPreview = urlParams.get('preview') === '1';
-            const previewView = urlParams.get('view') || 'participant'; // 'participant' | 'admin'
-
             function renderPageInto(container, elements, pageMode = 'participant') {
-                // Override pageMode with preview view if in preview mode
-                if (isPreview) {
-                    pageMode = previewView;
-                }
                 // Sort elements by y position for proper rendering order
                 elements.sort((a, b) => (a.y || 0) - (b.y || 0));
 
@@ -272,7 +324,14 @@
                         if (isHorizontal) return (a.x || 0) - (b.x || 0);
                         return (a.y || 0) - (b.y || 0);
                     });
-                    
+
+                    // Tinggi section ini sendiri (vertikal) -- anak-anaknya
+                    // position:absolute, jadi TIDAK ikut membentuk tinggi induk
+                    // secara alami. Tanpa ini, canvas-section collapse ke 0px
+                    // dan top:X% semua elemen jadi X% dari 0 = 0 -- semuanya
+                    // numpuk di pojok kiri atas, apa pun posisi aslinya.
+                    let sectionMaxPos = 0;
+
                     sortedElements.forEach(el => {
                         if (el.visible === false) return;
 
@@ -286,6 +345,7 @@
                             ? (xPct / 100) * cw + (widthPct / 100) * cw
                             : (yPct / 100) * cw + ((heightPct !== undefined ? (heightPct / 100) * cw : (el.height || 0)));
                         if (pos > maxPos) maxPos = pos;
+                        if (!isHorizontal && pos > sectionMaxPos) sectionMaxPos = pos;
 
                         const element = document.createElement('div');
                         element.className = 'canvas-element';
@@ -296,7 +356,16 @@
                             element.dataset.elementId = el.id;
                         }
                         element.dataset.elType = el.type || '';
-                        if (el.props && el.props.animation && el.props.animation !== 'none') element.dataset.anim = el.props.animation;
+                        var animSettings = racikResolveAnim(el.props);
+                        if (animSettings) {
+                            element.dataset.anim = animSettings.key;
+                            element.dataset.animCategory = animSettings.category || '';
+                            element.dataset.animTrigger = animSettings.trigger;
+                            // Disimpan sebagai properti JS (bukan cuma dataset string)
+                            // supaya durasi/delay/infinite tersedia utuh saat trigger
+                            // jalan nanti, tanpa perlu lookup ulang ke model elemen.
+                            element._racikAnim = animSettings;
+                        }
                         element.style.cssText = `
                             position: absolute;
                             left: ${xPct}%;
@@ -306,10 +375,14 @@
                             box-sizing: border-box;
                         `;
 
-                        element.innerHTML = renderElement(el);
+                        element.innerHTML = racikWrapWithLink(renderElement(el), el.props);
                         sectionContainer.appendChild(element);
                     });
                     
+                    if (!isHorizontal && sectionMaxPos > 0) {
+                        sectionContainer.style.minHeight = sectionMaxPos + 'px';
+                    }
+
                     container.appendChild(sectionContainer);
                     
                     if (isHorizontal) {
@@ -327,15 +400,15 @@
             allPages.forEach((pg, i) => {
                 const container = document.getElementById('event-public-page-' + i);
                 if (!container) return;
-                // Use preview view if in preview mode, otherwise use page's mode
-                const effectiveMode = isPreview ? previewView : (pg.mode || 'participant');
+                const effectiveMode = pg.mode || 'participant';
                 renderPageInto(container, pg.elements || [], effectiveMode);
             });
 
-            // Fetch participant data for participant-list elements (admin mode pages or preview admin view)
+            // Fetch participant data for participant-list elements (halaman
+            // bermode admin -- hanya pernah dikirim server lewat link /admin).
             const slug = @json($page->slug);
             allPages.forEach((pg, i) => {
-                const effectiveMode = isPreview ? previewView : (pg.mode || 'participant');
+                const effectiveMode = pg.mode || 'participant';
                 if (effectiveMode === 'admin') {
                     const container = document.getElementById('event-public-page-' + i);
                     if (!container) return;
@@ -363,28 +436,59 @@
                 }
             });
 
-            // Show preview banner if in preview mode
-            if (isPreview) {
+            // Penanda visual: ini link khusus panitia, bukan yang dibagikan ke
+            // peserta. Datanya asli (bukan dummy) -- beda dari mekanisme
+            // preview lama yang pernah ada di sini.
+            if (RACIK.isAdminView) {
                 const banner = document.createElement('div');
-                banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#4f46e5;color:#fff;padding:8px 16px;text-align:center;z-index:9999;font-size:14px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,.15)';
-                banner.innerHTML = `<strong>Mode Preview</strong> — Menampilkan sebagai <strong>${previewView === 'admin' ? 'Admin' : 'Peserta'}</strong>. Data form dummy tidak disimpan. <a href="${window.location.pathname}" style="color:#fff;text-decoration:underline;margin-left:16px;">Keluar Preview</a>`;
+                banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#111827;color:#fff;padding:8px 16px;text-align:center;z-index:9999;font-size:13px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,.15)';
+                banner.innerHTML = `<strong>Tampilan Panitia</strong> — halaman ini tidak dibagikan ke peserta. <a href="${RACIK.participantUrl}" style="color:#fff;text-decoration:underline;margin-left:16px;">Buka sebagai peserta</a>`;
                 document.body.prepend(banner);
             }
 
-            // Animasi kemunculan: mainkan saat elemen masuk viewport
-            const animEls = rootEl.querySelectorAll('.canvas-element[data-anim]');
-            if ('IntersectionObserver' in window && animEls.length) {
+            // Animasi objek: 3 cara mulai, sesuai pilihan EO di panel Animasi.
+            const animEls = Array.from(rootEl.querySelectorAll('.canvas-element[data-anim]'));
+            const scrollEls = [];
+
+            animEls.forEach((el) => {
+                const settings = el._racikAnim;
+                if (!settings) return;
+
+                if (settings.trigger === 'click') {
+                    el.style.cursor = 'pointer';
+                    el.addEventListener('click', function () {
+                        // Boleh diputar ulang berkali-kali per klik, bukan cuma sekali.
+                        el.classList.remove('anim-play');
+                        el.style.animationName = 'none';
+                        // eslint-disable-next-line no-unused-expressions
+                        void el.offsetWidth; // paksa reflow supaya restart animasi kedeteksi
+                        racikPlayAnim(el, settings);
+                    });
+                    return;
+                }
+
+                if (settings.trigger === 'load') {
+                    racikPlayAnim(el, settings);
+                    return;
+                }
+
+                // 'scroll' (default) -- diproses di bawah lewat satu IntersectionObserver
+                // bersama, supaya tidak bikin satu observer per elemen.
+                scrollEls.push(el);
+            });
+
+            if ('IntersectionObserver' in window && scrollEls.length) {
                 const io = new IntersectionObserver((entries) => {
                     entries.forEach((en) => {
                         if (en.isIntersecting) {
-                            en.target.classList.add('anim-play');
+                            racikPlayAnim(en.target, en.target._racikAnim);
                             io.unobserve(en.target);
                         }
                     });
                 }, { threshold: 0.15 });
-                animEls.forEach((el) => io.observe(el));
+                scrollEls.forEach((el) => io.observe(el));
             } else {
-                animEls.forEach((el) => el.classList.add('anim-play'));
+                scrollEls.forEach((el) => racikPlayAnim(el, el._racikAnim));
             }
 
             // Navigasi antar halaman
@@ -478,7 +582,7 @@
                         document.querySelectorAll('[data-el-type="pay-button"]').forEach(function (wrap) {
                             const elId = wrap.dataset.elementId;
                             const model = findElementById(elId);
-                            if (model) wrap.innerHTML = renderElement(model);
+                            if (model) wrap.innerHTML = racikWrapWithLink(renderElement(model), model.props);
                         });
                         alert(data.message);
                     } else {
@@ -505,7 +609,7 @@
                     RACIK.participantCount = data.used;
                     document.querySelectorAll('[data-el-type="participant-counter"]').forEach(function (wrap) {
                         const model = findElementById(wrap.dataset.elementId);
-                        if (model) wrap.innerHTML = renderElement(model);
+                        if (model) wrap.innerHTML = racikWrapWithLink(renderElement(model), model.props);
                     });
                 } catch (e) {
                     /* biarkan angka sebelumnya kalau jaringan gagal */
@@ -690,15 +794,103 @@
             return scope === 'both' || scope === mode;
         }
 
+        /* ===== KATALOG ANIMASI =====
+           Cerminan sisi-server dari resources/js/components/Builder/AnimationPresets.js.
+           Hanya field yang dipakai runtime publik: keyframe + category + durasi
+           bawaan. Daftar lengkap (label per bahasa Indonesia, dikelompokkan
+           Masuk/Perhatian/Keluar) ada di file JS itu -- di sini cukup untuk
+           MEMUTAR animasinya, bukan untuk UI pemilihan (itu tugas builder). */
+        const RACIK_ANIM_PRESETS = {
+            fade: { keyframe: 'racikFade', category: 'entrance', defaultDurationMs: 600 },
+            'slide-up': { keyframe: 'racikSlideUp', category: 'entrance', defaultDurationMs: 600 },
+            'slide-down': { keyframe: 'racikSlideDown', category: 'entrance', defaultDurationMs: 600 },
+            'slide-left': { keyframe: 'racikSlideLeft', category: 'entrance', defaultDurationMs: 600 },
+            'slide-right': { keyframe: 'racikSlideRight', category: 'entrance', defaultDurationMs: 600 },
+            zoom: { keyframe: 'racikZoom', category: 'entrance', defaultDurationMs: 550 },
+            bounce: { keyframe: 'racikBounce', category: 'entrance', defaultDurationMs: 800 },
+            pop: { keyframe: 'racikPop', category: 'entrance', defaultDurationMs: 500 },
+            flip: { keyframe: 'racikFlip', category: 'entrance', defaultDurationMs: 700 },
+            'rotate-in': { keyframe: 'racikRotateIn', category: 'entrance', defaultDurationMs: 700 },
+            pulse: { keyframe: 'racikPulse', category: 'attention', defaultDurationMs: 900 },
+            shake: { keyframe: 'racikShake', category: 'attention', defaultDurationMs: 700 },
+            wobble: { keyframe: 'racikWobble', category: 'attention', defaultDurationMs: 900 },
+            tada: { keyframe: 'racikTada', category: 'attention', defaultDurationMs: 900 },
+            heartbeat: { keyframe: 'racikHeartbeat', category: 'attention', defaultDurationMs: 1000 },
+            flash: { keyframe: 'racikFlash', category: 'attention', defaultDurationMs: 900 },
+            'fade-out': { keyframe: 'racikFadeOut', category: 'exit', defaultDurationMs: 500 },
+            'slide-out-up': { keyframe: 'racikSlideOutUp', category: 'exit', defaultDurationMs: 500 },
+            'slide-out-down': { keyframe: 'racikSlideOutDown', category: 'exit', defaultDurationMs: 500 },
+            'zoom-out': { keyframe: 'racikZoomOut', category: 'exit', defaultDurationMs: 500 },
+            shrink: { keyframe: 'racikShrink', category: 'exit', defaultDurationMs: 450 },
+            // Alias event lama, sebelum katalog ini punya banyak pilihan slide.
+            slide: { keyframe: 'racikSlideDown', category: 'entrance', defaultDurationMs: 600 },
+        };
+
+        /**
+         * Nilai efektif animasi sebuah objek. Balik null kalau objek ini
+         * memang tidak beranimasi -- pemanggilnya cukup cek truthy-nya.
+         */
+        function racikResolveAnim(props) {
+            const key = (props && props.animation) || 'none';
+            if (key === 'none') return null;
+            const preset = RACIK_ANIM_PRESETS[key];
+            if (!preset) return null;
+
+            const rawDuration = props && Number(props.animDuration);
+            const rawDelay = props && Number(props.animDelay);
+
+            return {
+                key: key,
+                keyframe: preset.keyframe,
+                category: preset.category,
+                infinite: !!(props && props.animInfinite),
+                delay: (rawDelay > 0) ? rawDelay : 0,
+                duration: (rawDuration > 0) ? rawDuration : (preset.defaultDurationMs || 600) / 1000,
+                trigger: (props && props.animTrigger) || 'scroll',
+            };
+        }
+
+        /** Pasang animation-* inline di elemen lalu mulai animasinya. */
+        function racikPlayAnim(element, settings) {
+            element.style.animationName = settings.keyframe;
+            element.style.animationDuration = settings.duration + 's';
+            element.style.animationDelay = settings.delay + 's';
+            element.style.animationIterationCount = settings.infinite ? 'infinite' : '1';
+            element.style.animationTimingFunction = 'ease-out';
+            element.style.animationFillMode = settings.infinite ? 'none' : 'both';
+            element.classList.add('anim-play');
+        }
+
         // Dipakai bersama oleh renderElement dan seluruh helper render* di bawah.
         // Sebelumnya ini const lokal di dalam renderElement, sehingga setiap
         // helper yang memakainya melempar ReferenceError saat dipanggil.
         const baseStyle = 'max-width: 100%; box-sizing: border-box;';
 
+        /**
+         * Cerminan wrapWithLink() di EventBuilder.jsx -- kalau props.isLink
+         * aktif, bungkus markup elemen dengan <a>. linkTarget menyimpan
+         * tujuan siap pakai untuk keduanya ("/e/slug-halaman" internal, URL
+         * penuh eksternal), persis format yang sama dipakai tipe elemen
+         * "link" khusus. Sebelumnya toggle "Jadikan Link" di builder untuk
+         * SEMUA elemen dasar (teks, bentuk, gambar, dst.) tidak berefek apa
+         * pun di halaman publik -- markup-nya dirender di sini, dan di sini
+         * tidak pernah ada logika pembungkus <a> sama sekali.
+         */
+        function racikWrapWithLink(html, props) {
+            const p = props || {};
+            if (!p.isLink || !p.linkTarget) return html;
+            const target = p.openInNewTab !== false ? '_blank' : '_self';
+            const rel = p.openInNewTab !== false ? ' rel="noopener noreferrer"' : '';
+            return `<a href="${escapeAttr(p.linkTarget)}" target="${target}"${rel} style="text-decoration:none;color:inherit;display:inline-block;max-width:100%;">${html}</a>`;
+        }
+
         function renderElement(el) {
             switch (el.type) {
-                case 'text':
-                    return `<div class="el-text" style="font-size:${el.props.fontSize}px;color:${el.props.color};font-weight:${el.props.fontWeight};${baseStyle}">${escapeHtml(el.props.content)}</div>`;
+                case 'text': {
+                    const tp = el.props || {};
+                    const fontFamilyCss = tp.fontFamily ? `font-family:${escapeAttr(tp.fontFamily)};` : '';
+                    return `<div class="el-text" style="font-size:${tp.fontSize}px;color:${tp.color};font-weight:${tp.fontWeight};${fontFamilyCss}${baseStyle}">${escapeHtml(tp.content)}</div>`;
+                }
                 
                 case 'image':
                     return `<img class="el-image" src="${escapeHtml(el.props.src)}" alt="${escapeHtml(el.props.alt)}" style="width:100%;height:auto;object-fit:cover;border-radius:4px;${baseStyle}">`;
@@ -759,7 +951,8 @@
                     const lp = el.props || {};
                     const href = escapeAttr(lp.linkTarget || '#');
                     const target = lp.openInNewTab !== false ? ' target="_blank" rel="noopener noreferrer"' : '';
-                    return `<a class="el-link" href="${href}"${target} style="font-size:${Number(lp.fontSize) || 16}px;color:${escapeAttr(lp.color || '#3b82f6')};font-weight:${escapeAttr(String(lp.fontWeight || 500))};text-decoration:underline;text-underline-offset:3px;line-height:1.5;word-break:break-word;overflow-wrap:anywhere;${baseStyle}">${escapeHtml(lp.content)}</a>`;
+                    const linkFontFamilyCss = lp.fontFamily ? `font-family:${escapeAttr(lp.fontFamily)};` : '';
+                    return `<a class="el-link" href="${href}"${target} style="font-size:${Number(lp.fontSize) || 16}px;color:${escapeAttr(lp.color || '#3b82f6')};font-weight:${escapeAttr(String(lp.fontWeight || 500))};${linkFontFamilyCss}text-decoration:underline;text-underline-offset:3px;line-height:1.5;word-break:break-word;overflow-wrap:anywhere;${baseStyle}">${escapeHtml(lp.content)}</a>`;
                 }
 
                 // Navbar responsif: desktop horizontal, ≤1024px collapse ke hamburger
@@ -889,12 +1082,65 @@
             return d + ' Z';
         }
 
+        /* ===== WARNA BENTUK: SOLID / GRADIENT =====
+           Cerminan dari resources/js/components/Builder/GradientColorField.jsx.
+           Bentuk = SVG, jadi gradient perlu <linearGradient> beneran; badge/
+           fallback default = <div> CSS biasa, pakai linear-gradient() string. */
+        function racikResolveBackgroundFill(props, fallbackColor) {
+            const bg = props && props.background;
+            if (bg && bg.type === 'gradient' && Array.isArray(bg.stops) && bg.stops.length >= 2) {
+                return {
+                    mode: 'gradient',
+                    angle: (typeof bg.angle === 'number' && isFinite(bg.angle)) ? bg.angle : 135,
+                    stops: bg.stops.map(function (st, i) {
+                        return {
+                            color: st.color || fallbackColor,
+                            position: (typeof st.position === 'number' && isFinite(st.position))
+                                ? st.position
+                                : (i / (bg.stops.length - 1)) * 100,
+                        };
+                    }),
+                };
+            }
+            return { mode: 'solid', color: (bg && bg.color) || (props && props.bgColor) || fallbackColor };
+        }
+
+        function racikCssGradientString(angle, stops) {
+            const stopsCss = stops.map(function (s) { return s.color + ' ' + s.position + '%'; }).join(', ');
+            return 'linear-gradient(' + angle + 'deg, ' + stopsCss + ')';
+        }
+
+        // "Magic corners" ala CSS linear-gradient, dalam koordinat piksel --
+        // lihat komentar svgGradientLine() di GradientColorField.jsx untuk
+        // penjelasan rumusnya.
+        function racikSvgGradientLine(angleDeg, w, h) {
+            const rad = (angleDeg * Math.PI) / 180;
+            const dx = Math.sin(rad);
+            const dy = -Math.cos(rad);
+            const length = Math.abs(w * dx) + Math.abs(h * dy);
+            const half = length / 2;
+            const cx = w / 2;
+            const cy = h / 2;
+            return { x1: cx - dx * half, y1: cy - dy * half, x2: cx + dx * half, y2: cy + dy * half };
+        }
+
+        function racikSvgOpen(w, h, gradientDefsStr) {
+            return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' + gradientDefsStr;
+        }
+
         function shapeMarkup(el) {
             const p = el.props || {};
             const isStroked = ['line', 'arrow', 'divider'].includes(el.type);
             const sw = Math.min(p.strokeWidth || 2, 40);
             const fill = escapeAttr(p.bgColor || '#4b5563');
             const strokeColor = escapeAttr(p.strokeColor || '#6b7280');
+
+            const resolvedFill = racikResolveBackgroundFill(p, '#4b5563');
+            const isGradientFill = !isStroked && resolvedFill.mode === 'gradient';
+            const gradientId = 'grad-' + (el.id || 'shape') + '-' + el.type;
+            const cssBgValue = isGradientFill
+                ? racikCssGradientString(resolvedFill.angle, resolvedFill.stops)
+                : fill;
             const dash = p.strokeDasharray && p.strokeDasharray !== 'none' ? ' stroke-dasharray="' + escapeAttr(p.strokeDasharray) + '"' : '';
             // Rekonstruksi ukuran px seperti editor (% dari base canvas 1200).
             // SVG memakai preserveAspectRatio="none" sehingga tetap stretch mengisi box.
@@ -917,74 +1163,84 @@
             const ry = Math.max(h / 2 - inset, 1);
             const r = Math.max(Math.min(w, h) / 2 - inset, 1);
 
-            const commonFill = isStroked ? 'none' : fill;
+            const commonFill = isStroked ? 'none' : (isGradientFill ? 'url(#' + gradientId + ')' : fill);
             const commonStroke = isStroked ? ' stroke="' + strokeColor + '" stroke-width="' + sw + '"' + dash + ' stroke-linecap="round" stroke-linejoin="round"' : '';
+
+            let gradientDefsStr = '';
+            if (isGradientFill) {
+                const line = racikSvgGradientLine(resolvedFill.angle, w, h);
+                const stopsMarkup = resolvedFill.stops.map(function (st) {
+                    return '<stop offset="' + st.position + '%" stop-color="' + escapeAttr(st.color) + '" />';
+                }).join('');
+                gradientDefsStr = '<defs><linearGradient id="' + gradientId + '" gradientUnits="userSpaceOnUse" x1="' +
+                    line.x1 + '" y1="' + line.y1 + '" x2="' + line.x2 + '" y2="' + line.y2 + '">' + stopsMarkup + '</linearGradient></defs>';
+            }
 
             switch (el.type) {
                 case 'rectangle':
-                    return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+                    return racikSvgOpen(w, h, gradientDefsStr) +
                         '<rect x="' + inset + '" y="' + inset + '" width="' + Math.max(w - inset * 2, 1) + '" height="' + Math.max(h - inset * 2, 1) + '" fill="' + commonFill + '"' + commonStroke + ' /></svg>';
                 case 'rounded-rectangle':
                 case 'shape': {
                     const rad = Math.min(p.radius === undefined ? 16 : p.radius, w / 2, h / 2);
-                    return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+                    return racikSvgOpen(w, h, gradientDefsStr) +
                         '<rect x="' + inset + '" y="' + inset + '" width="' + Math.max(w - inset * 2, 1) + '" height="' + Math.max(h - inset * 2, 1) + '" rx="' + rad + '" ry="' + rad + '" fill="' + commonFill + '"' + commonStroke + ' /></svg>';
                 }
                 case 'circle':
-                    return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+                    return racikSvgOpen(w, h, gradientDefsStr) +
                         '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '" fill="' + commonFill + '"' + commonStroke + ' /></svg>';
                 case 'triangle':
-                    return svgPolygon(polygonPointsStr(3, cx, cy, r), commonFill, commonStroke, w, h);
+                    return svgPolygon(polygonPointsStr(3, cx, cy, r), commonFill, commonStroke, w, h, gradientDefsStr);
                 case 'diamond':
-                    return svgPolygon(polygonPointsStr(4, cx, cy, r), commonFill, commonStroke, w, h);
+                    return svgPolygon(polygonPointsStr(4, cx, cy, r), commonFill, commonStroke, w, h, gradientDefsStr);
                 case 'pentagon':
-                    return svgPolygon(polygonPointsStr(5, cx, cy, r), commonFill, commonStroke, w, h);
+                    return svgPolygon(polygonPointsStr(5, cx, cy, r), commonFill, commonStroke, w, h, gradientDefsStr);
                 case 'hexagon':
-                    return svgPolygon(polygonPointsStr(6, cx, cy, r), commonFill, commonStroke, w, h);
+                    return svgPolygon(polygonPointsStr(6, cx, cy, r), commonFill, commonStroke, w, h, gradientDefsStr);
                 case 'polygon':
-                    return svgPolygon(polygonPointsStr(Math.round(p.sides || 6), cx, cy, r), commonFill, commonStroke, w, h);
+                    return svgPolygon(polygonPointsStr(Math.round(p.sides || 6), cx, cy, r), commonFill, commonStroke, w, h, gradientDefsStr);
                 case 'star':
-                    return svgPolygon(starPointsStr(Math.round(p.points || 5), cx, cy, r, r * 0.45), commonFill, commonStroke, w, h);
+                    return svgPolygon(starPointsStr(Math.round(p.points || 5), cx, cy, r, r * 0.45), commonFill, commonStroke, w, h, gradientDefsStr);
                 case 'heart':
-                    return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+                    return racikSvgOpen(w, h, gradientDefsStr) +
                         '<path d="' + heartPathStr(cx, cy + h * 0.02, Math.min(w * 0.92, h)) + '" fill="' + commonFill + '"' + commonStroke + ' /></svg>';
                 case 'speech-bubble':
-                    return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
-                        '<path d="' + speechBubblePathStr(w, h, Math.min(24, w * 0.3), Math.min(22, h * 0.35), p.radius === undefined ? 12 : p.radius) + '" fill="' + fill + '" /></svg>';
+                    return racikSvgOpen(w, h, gradientDefsStr) +
+                        '<path d="' + speechBubblePathStr(w, h, Math.min(24, w * 0.3), Math.min(22, h * 0.35), p.radius === undefined ? 12 : p.radius) + '" fill="' + commonFill + '" /></svg>';
                 case 'blob':
-                    return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+                    return racikSvgOpen(w, h, gradientDefsStr) +
                         '<path d="' + blobPathStr(cx, cy, r) + '" fill="' + commonFill + '"' + commonStroke + ' /></svg>';
                 case 'line':
-                    return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+                    return racikSvgOpen(w, h, gradientDefsStr) +
                         '<line x1="' + inset + '" y1="' + cy + '" x2="' + Math.max(w - inset, inset) + '" y2="' + cy + '" stroke="' + strokeColor + '" stroke-width="' + sw + '"' + dash + ' stroke-linecap="round" /></svg>';
                 case 'arrow': {
                     const headLen = Math.min(Math.max(sw * 3.5, 10), w * 0.35);
                     const headHalf = Math.max(sw * 2.2, 5);
                     const tipX = w - inset;
                     const shaftEndX = tipX - headLen;
-                    return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+                    return racikSvgOpen(w, h, gradientDefsStr) +
                         '<line x1="' + inset + '" y1="' + cy + '" x2="' + shaftEndX + '" y2="' + cy + '" stroke="' + strokeColor + '" stroke-width="' + sw + '"' + dash + ' stroke-linecap="round" />' +
                         '<polygon points="' + tipX + ',' + cy + ' ' + shaftEndX + ',' + (cy - headHalf) + ' ' + shaftEndX + ',' + (cy + headHalf) + '" fill="' + strokeColor + '" /></svg>';
                 }
                 case 'divider':
-                    return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+                    return racikSvgOpen(w, h, gradientDefsStr) +
                         '<line x1="0" y1="' + cy + '" x2="' + w + '" y2="' + cy + '" stroke="' + strokeColor + '" stroke-width="' + sw + '"' + dash + ' stroke-linecap="round" /></svg>';
                 case 'badge': {
                     const padX = p.paddingX === undefined ? 12 : p.paddingX;
                     const padY = p.paddingY === undefined ? 4 : p.paddingY;
                     const fontSize = Math.max(10, Math.min((h - padY * 2) * 0.9, 32));
-                    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:' + fill +
+                    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:' + cssBgValue +
                         ';color:' + escapeAttr(p.textColor || '#ffffff') + ';border-radius:' + escapeAttr(String(p.radius === undefined ? 9999 : p.radius)) + 'px;padding:' + padY + 'px ' + padX +
                         'px;overflow:hidden;box-sizing:border-box;"><span style="font-size:' + fontSize + 'px;font-weight:600;white-space:nowrap;font-family:system-ui,sans-serif;line-height:1;">' +
                         escapeHtml(p.label || 'Badge') + '</span></div>';
                 }
                 default:
-                    return '<div style="width:100%;height:100%;background:' + fill + ';"></div>';
+                    return '<div style="width:100%;height:100%;background:' + cssBgValue + ';"></div>';
             }
         }
 
-        function svgPolygon(points, fill, strokeAttrs, w, h) {
-            return '<svg width="100%" height="100%" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+        function svgPolygon(points, fill, strokeAttrs, w, h, gradientDefsStr) {
+            return racikSvgOpen(w, h, gradientDefsStr || '') +
                 '<polygon points="' + points + '" fill="' + fill + '"' + strokeAttrs + ' /></svg>';
         }
 

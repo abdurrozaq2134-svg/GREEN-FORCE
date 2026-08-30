@@ -30,6 +30,10 @@ import {
 
 import EventSidebar from "./EventSidebar";
 import PagesDock from "./PagesDock";
+import AnimationPanel from "./AnimationPanel";
+import { ANIMATION_PRESETS, resolveAnimationSettings, animationRuntimeStyle } from "./AnimationPresets";
+import GradientColorField, { resolveBackgroundFill, svgGradientLine, cssGradientString } from "./GradientColorField";
+import FontPicker from "./FontPicker";
 
 // ===================== IKON DASAR (defined first for use in component arrays) =====================
 function IconText() {
@@ -410,21 +414,21 @@ const defaults = {
             color: "#1a1a1a",
             fontWeight: "600",
             isLink: false,
-            linkUrl: "",
+            linkType: "external",
             linkTarget: "",
             openInNewTab: true,
         },
-        title: { widthPreset: "narrow", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        subtitle: { widthPreset: "narrow", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        image: { src: "https://placehold.co/400x300?text=Gambar", alt: "Gambar", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        video: { src: "https://www.youtube.com/embed/dQw4w9WgXcQ", alt: "Video", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
+        title: { widthPreset: "narrow", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        subtitle: { widthPreset: "narrow", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        image: { src: "https://placehold.co/400x300?text=Gambar", alt: "Gambar", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        video: { src: "https://www.youtube.com/embed/dQw4w9WgXcQ", alt: "Video", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
         button: {
             label: "Klik di sini",
             bgColor: "#4f46e5",
             textColor: "#ffffff",
             radius: 8,
             isLink: false,
-            linkUrl: "",
+            linkType: "external",
             linkTarget: "",
             openInNewTab: true,
         },
@@ -441,22 +445,22 @@ const defaults = {
             hoverColor: "#2563eb",
         },
         // Basic shapes (filled)
-        rectangle: { bgColor: "#4b5563", radius: 4, isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        "rounded-rectangle": { bgColor: "#4b5563", radius: 16, isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        circle: { bgColor: "#4b5563", radius: 9999, isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        triangle: { bgColor: "#4b5563", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        diamond: { bgColor: "#4b5563", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        pentagon: { bgColor: "#4b5563", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        hexagon: { bgColor: "#4b5563", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        polygon: { bgColor: "#4b5563", sides: 6, isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        star: { bgColor: "#4b5563", points: 5, isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        heart: { bgColor: "#4b5563", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        "speech-bubble": { bgColor: "#4b5563", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        blob: { bgColor: "#4b5563", isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
+        rectangle: { bgColor: "#4b5563", radius: 4, isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        "rounded-rectangle": { bgColor: "#4b5563", radius: 16, isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        circle: { bgColor: "#4b5563", radius: 9999, isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        triangle: { bgColor: "#4b5563", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        diamond: { bgColor: "#4b5563", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        pentagon: { bgColor: "#4b5563", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        hexagon: { bgColor: "#4b5563", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        polygon: { bgColor: "#4b5563", sides: 6, isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        star: { bgColor: "#4b5563", points: 5, isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        heart: { bgColor: "#4b5563", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        "speech-bubble": { bgColor: "#4b5563", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        blob: { bgColor: "#4b5563", isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
         // Functional
-        divider: { strokeColor: "#d1d5db", strokeWidth: 1, strokeDasharray: "none", fullWidth: true, isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        badge: { bgColor: "#4f46e5", textColor: "#ffffff", label: "Badge", radius: 9999, paddingX: 12, paddingY: 4, isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
-        "google-login": { label: "Masuk dengan Google", bgColor: "#ffffff", textColor: "#333333", borderColor: "#dadce0", radius: 4, isLink: false, linkUrl: "", linkTarget: "", openInNewTab: true },
+        divider: { strokeColor: "#d1d5db", strokeWidth: 1, strokeDasharray: "none", fullWidth: true, isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        badge: { bgColor: "#4f46e5", textColor: "#ffffff", label: "Badge", radius: 9999, paddingX: 12, paddingY: 4, isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
+        "google-login": { label: "Masuk dengan Google", bgColor: "#ffffff", textColor: "#333333", borderColor: "#dadce0", radius: 4, isLink: false, linkType: "external", linkTarget: "", openInNewTab: true },
     };
     return type in EVENT_DEFAULT_PROPS
         ? JSON.parse(JSON.stringify(EVENT_DEFAULT_PROPS[type]))
@@ -1389,9 +1393,7 @@ const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved |
             widthPct: pxToPct(size.width),
             heightPct: pxToPct(size.height),
             visible: true,
-            // Objek baru mewarisi tab mode yang sedang aktif; form/rsvp
-            // selalu "participant" berapa pun mode-nya.
-            scope: resolveScopeForNew(type, viewMode),
+            scope: resolveScopeForNew(type),
             props: {
                 ...defaultPropsFor(type),
                 src: url,
@@ -1458,7 +1460,7 @@ const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved |
             widthPct: pxToPct(finalSize.width),
             heightPct: pxToPct(finalSize.height),
             visible: true,
-            scope: resolveScopeForNew(type, viewMode),
+            scope: resolveScopeForNew(type),
             props: defaultPropsFor(type),
         });
 
@@ -1959,7 +1961,7 @@ const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved |
                 }}
             />
             {/* ===================== TOOLBAR ===================== */}
-            <header className="toolbar" style={{ paddingLeft: sidebarW }}>
+            <header className="toolbar">
                 <div className="toolbar-left">
                     <button
                         className="icon-btn"
@@ -2736,15 +2738,13 @@ const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved |
                                                     (typeof el.props?.opacity === "number" ? el.props.opacity : 1) *
                                                     (!previewMode && !isElementVisibleInMode(el, viewMode) ? 0.35 : 1),
                                                 ...(fxToCss(el.props?.effects)),
+                                                // Toggle "Preview" di kanvas builder cuma memutar
+                                                // animasi langsung (tidak mensimulasikan trigger
+                                                // scroll/klik sungguhan) — itu tugas panel Animasi
+                                                // (pratinjau live) dan halaman publik yang sebenarnya.
+                                                ...(previewMode ? animationRuntimeStyle(el.props) : {}),
                                             }}
-                                            className={
-                                                "canvas-element" +
-                                                (previewMode &&
-                                                el.props?.animation &&
-                                                el.props.animation !== "none"
-                                                    ? " racik-anim-" + el.props.animation
-                                                    : "")
-                                            }
+                                            className="canvas-element"
                                             onClick={(e) => {
                                                 /* Backup selection: react-rnd v10 does NOT
                                                    reliably fire its Rnd-level onMouseDown
@@ -2877,10 +2877,30 @@ const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved |
                                     <div
                                         className="validation-modal-overlay"
                                         onClick={() => setConfirmDeletePageId(null)}
+                                        style={{
+                                            position: "fixed",
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            background: "rgba(0,0,0,0.5)",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            zIndex: 1000,
+                                        }}
                                     >
                                         <div
                                             className="validation-modal"
                                             onClick={(e) => e.stopPropagation()}
+                                            style={{
+                                                background: "#fff",
+                                                borderRadius: 12,
+                                                padding: 24,
+                                                maxWidth: 420,
+                                                width: "90%",
+                                                boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+                                            }}
                                         >
                                             <h3 style={{ margin: "0 0 8px" }}>Hapus halaman?</h3>
                                             <p style={{ margin: "0 0 16px", fontSize: 13, color: "#6b7280" }}>
@@ -3032,6 +3052,18 @@ const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved |
                                                         url={publicUrls?.path}
                                                     />
 
+                                                    <div style={{ margin: "18px 0 4px", borderTop: "1px solid #f3f4f6" }} />
+
+                                                    <p style={{ fontSize: 13, color: "#6b7280", margin: "12px 0 16px" }}>
+                                                        Tautan ini khusus Anda — menampilkan halaman bermode Panitia
+                                                        (mis. Daftar Peserta) dan mewajibkan login sebagai pemilik event.
+                                                        Jangan dibagikan ke peserta.
+                                                    </p>
+                                                    <PublishLinkRow
+                                                        label="Link Panitia"
+                                                        url={publicUrls?.admin}
+                                                    />
+
                                                     <div style={{ marginTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                         <button
                                                             type="button"
@@ -3119,12 +3151,25 @@ function blobPath(cx, cy, baseR) {
 // ===================== SHAPE RENDERER =====================
 const STROKED_SHAPE_TYPES = ["line", "arrow", "divider"];
 
-function ShapeContent({ type, props, width, height }) {
+function ShapeContent({ type, props, width, height, elementId }) {
     const p = props || {};
     const isStroked = STROKED_SHAPE_TYPES.includes(type);
     const sw = Math.min(p.strokeWidth || 2, 40);
     const fillColor = p.bgColor || "#4b5563";
     const strokeColor = p.strokeColor || "#6b7280";
+
+    // Warna bentuk: solid atau gradient (lihat GradientColorField.jsx).
+    // Bentuk dirender sebagai SVG, jadi gradient butuh <linearGradient>
+    // beneran -- CSS background: linear-gradient() tidak berlaku untuk
+    // atribut `fill`. "badge" & fallback default TIDAK SVG (div biasa),
+    // makanya juga disiapkan versi CSS-nya (cssBgValue).
+    const resolvedFill = resolveBackgroundFill(p, "#4b5563");
+    const gradientId = "grad-" + (elementId || "shape") + "-" + type;
+    const isGradientFill = !isStroked && resolvedFill.mode === "gradient";
+    const fillValue = isGradientFill ? `url(#${gradientId})` : fillColor;
+    const cssBgValue = isGradientFill
+        ? cssGradientString(resolvedFill.angle, resolvedFill.stops)
+        : fillColor;
     const dashArray =
         p.strokeDasharray && p.strokeDasharray !== "none"
             ? p.strokeDasharray
@@ -3139,7 +3184,7 @@ function ShapeContent({ type, props, width, height }) {
     const r = Math.max(Math.min(w, h) / 2 - inset, 1);
 
     const commonShapeProps = {
-        fill: isStroked ? "none" : fillColor,
+        fill: isStroked ? "none" : fillValue,
         stroke: isStroked ? strokeColor : "none",
         strokeWidth: isStroked ? sw : undefined,
         strokeDasharray: dashArray,
@@ -3151,6 +3196,15 @@ function ShapeContent({ type, props, width, height }) {
         case "rectangle":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <rect x={inset} y={inset} width={Math.max(w - inset * 2, 1)} height={Math.max(h - inset * 2, 1)} {...commonShapeProps} />
                 </svg>
             );
@@ -3158,6 +3212,15 @@ function ShapeContent({ type, props, width, height }) {
         case "shape":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <rect
                         x={inset}
                         y={inset}
@@ -3172,57 +3235,138 @@ function ShapeContent({ type, props, width, height }) {
         case "circle":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <ellipse cx={cx} cy={cy} rx={rx} ry={ry} {...commonShapeProps} />
                 </svg>
             );
         case "triangle":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <polygon points={polygonPoints(3, cx, cy, r)} {...commonShapeProps} />
                 </svg>
             );
         case "diamond":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <polygon points={polygonPoints(4, cx, cy, r, -Math.PI / 2)} {...commonShapeProps} />
                 </svg>
             );
         case "pentagon":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <polygon points={polygonPoints(5, cx, cy, r)} {...commonShapeProps} />
                 </svg>
             );
         case "hexagon":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <polygon points={polygonPoints(6, cx, cy, r)} {...commonShapeProps} />
                 </svg>
             );
         case "polygon":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <polygon points={polygonPoints(Math.round(p.sides || 6), cx, cy, r)} {...commonShapeProps} />
                 </svg>
             );
         case "star":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <polygon points={starPoints(Math.round(p.points || 5), cx, cy, r)} {...commonShapeProps} />
                 </svg>
             );
         case "heart":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <path d={heartPath(cx, cy, Math.min(w, h))} {...commonShapeProps} />
                 </svg>
             );
         case "speech-bubble":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <path
                         d={speechBubblePath(w, h, Math.min(24, w * 0.3), Math.min(22, h * 0.35), p.radius ?? 12)}
-                        fill={fillColor}
+                        fill={fillValue}
                         stroke="none"
                     />
                 </svg>
@@ -3230,12 +3374,30 @@ function ShapeContent({ type, props, width, height }) {
         case "blob":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <path d={blobPath(cx, cy, r)} {...commonShapeProps} />
                 </svg>
             );
         case "line":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <line x1={inset} y1={cy} x2={Math.max(w - inset, inset)} y2={cy} stroke={strokeColor} strokeWidth={sw} strokeDasharray={dashArray} strokeLinecap="round" />
                 </svg>
             );
@@ -3246,6 +3408,15 @@ function ShapeContent({ type, props, width, height }) {
             const shaftEndX = tipX - headLen;
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <line x1={inset} y1={cy} x2={shaftEndX} y2={cy} stroke={strokeColor} strokeWidth={sw} strokeDasharray={dashArray} strokeLinecap="round" />
                     <polygon points={`${tipX},${cy} ${shaftEndX},${cy - headHalf} ${shaftEndX},${cy + headHalf}`} fill={strokeColor} />
                 </svg>
@@ -3254,6 +3425,15 @@ function ShapeContent({ type, props, width, height }) {
         case "divider":
             return (
                 <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                    {isGradientFill && (
+                        <defs>
+                            <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" {...svgGradientLine(resolvedFill.angle, w, h)}>
+                                {resolvedFill.stops.map((stop, i) => (
+                                    <stop key={i} offset={`${stop.position}%`} stopColor={stop.color} />
+                                ))}
+                            </linearGradient>
+                        </defs>
+                    )}
                     <line x1={0} y1={cy} x2={w} y2={cy} stroke={strokeColor} strokeWidth={sw} strokeDasharray={dashArray} strokeLinecap="round" />
                 </svg>
             );
@@ -3269,7 +3449,7 @@ function ShapeContent({ type, props, width, height }) {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background: fillColor,
+                        background: cssBgValue,
                         color: p.textColor || "#ffffff",
                         borderRadius: p.radius ?? 9999,
                         padding: `${padY}px ${padX}px`,
@@ -3285,7 +3465,7 @@ function ShapeContent({ type, props, width, height }) {
         }
         default:
             return (
-                <div style={{ width: "100%", height: "100%", background: fillColor, borderRadius: p.radius ?? 4 }} />
+                <div style={{ width: "100%", height: "100%", background: cssBgValue, borderRadius: p.radius ?? 4 }} />
             );
     }
 }
@@ -3304,10 +3484,12 @@ export function ElementRenderer({
 
     const responsiveStyle = {};
 
-    // Helper: wrap content with <a> if isLink is true
+    // Helper: wrap content with <a> if isLink is true. linkTarget menyimpan
+    // tujuan siap pakai untuk KEDUANYA -- "/e/slug-halaman" untuk internal,
+    // URL penuh untuk eksternal -- sama seperti tipe elemen "link" khusus.
     const wrapWithLink = (content, p) => {
-        if (!p.isLink || !p.linkUrl) return content;
-        const href = p.linkTarget || p.linkUrl || '#';
+        if (!p.isLink || !p.linkTarget) return content;
+        const href = p.linkTarget || '#';
         const target = p.openInNewTab !== false ? '_blank' : '_self';
         const rel = p.openInNewTab !== false ? 'noopener noreferrer' : '';
         return (
@@ -3653,6 +3835,7 @@ export function ElementRenderer({
                         props={effectiveProps}
                         width={el.width}
                         height={el.height}
+                        elementId={el.id}
                     />
                 </div>
             , effectiveProps);
@@ -3878,6 +4061,10 @@ export function ObjectPropertyPanel({
     siblingElements = [],
 }) {
     const [panel, setPanel] = useState(null); // null | "color"
+    // Halaman/panel dedicated Animasi menggantikan SELURUH body panel ini
+    // sementara terbuka (bukan modal) -- persis mekanisme "sidebar kiri
+    // sama, konten berganti" yang sudah dipakai panel properti lain.
+    const [showAnimPanel, setShowAnimPanel] = useState(false);
     const fp = el.props || {};
     const t = el.type;
 
@@ -3925,23 +4112,10 @@ export function ObjectPropertyPanel({
             <div key="grp-font" className="ctl-box">
                 <div className="ctl-row">
                     <span className="ctl-label"><IconType /></span>
-                    <select
-                        className="ctl-select"
-                        style={{ fontFamily: fp.fontFamily || "inherit" }}
-                        value={fp.fontFamily || ""}
-                        onChange={(e) =>
-                            onUpdateProps({
-                                fontFamily: e.target.value || undefined,
-                            })
-                        }
-                    >
-                        <option value="">Font default</option>
-                        {FONT_FAMILIES.map((f) => (
-                            <option key={f.label} value={f.value} style={{ fontFamily: f.preview }}>
-                                {f.label}
-                            </option>
-                        ))}
-                    </select>
+                    <FontPicker
+                        value={fp.fontFamily}
+                        onChange={(v) => onUpdateProps({ fontFamily: v })}
+                    />
                 </div>
                 <div className="ctl-row">
                     <span className="ctl-label"><IconType /></span>
@@ -4093,25 +4267,40 @@ export function ObjectPropertyPanel({
     // ===== SHAPE: fill/radius/stroke =====
     if (isShape) {
         const strokeMode = isStroked;
-        const colorKey = strokeMode ? "strokeColor" : "bgColor";
-        controls.push(
-            <div key="grp-fill" className="ctl-box">
-                <div className="ctl-row">
-                    <span className="ctl-label">
-                        {strokeMode ? <IconLineWidth /> : <IconFill />}
-                    </span>
-                    <TBtn title={strokeMode ? "Warna garis" : "Warna bentuk"}
-                        active={panel === "color"}
-                        onClick={() => setPanel((p) => (p === "color" ? null : "color"))}>
-                        <span className="ftb-swatch lg"
-                            style={{ background: fp[colorKey] || (strokeMode ? "#6b7280" : "#4b5563") }} />
-                    </TBtn>
-                    <span className="ctl-value mono">
-                        {(fp[colorKey] || (strokeMode ? "#6b7280" : "#4b5563")).toUpperCase()}
-                    </span>
-                </div>
-            </div>,
-        );
+        if (strokeMode) {
+            // Warna garis tetap warna polos biasa -- gradient di sini tidak
+            // relevan (garis tipis, bukan area "latar" objek).
+            controls.push(
+                <div key="grp-fill" className="ctl-box">
+                    <div className="ctl-row">
+                        <span className="ctl-label"><IconLineWidth /></span>
+                        <TBtn title="Warna garis"
+                            active={panel === "color"}
+                            onClick={() => setPanel((p) => (p === "color" ? null : "color"))}>
+                            <span className="ftb-swatch lg"
+                                style={{ background: fp.strokeColor || "#6b7280" }} />
+                        </TBtn>
+                        <span className="ctl-value mono">
+                            {(fp.strokeColor || "#6b7280").toUpperCase()}
+                        </span>
+                    </div>
+                </div>,
+            );
+        } else {
+            // Warna bentuk: field terpadu Solid/Gradient, ditempel langsung
+            // di panel ini (bukan popover/panel terpisah) -- gantikan swatch
+            // polos lama sepenuhnya untuk objek Bentuk.
+            controls.push(
+                <div key="grp-fill" className="ctl-box">
+                    <p className="ctl-box-title">Warna Bentuk</p>
+                    <GradientColorField
+                        props={fp}
+                        onUpdateProps={onUpdateProps}
+                        fallbackColor="#4b5563"
+                    />
+                </div>,
+            );
+        }
         if (RADIUS_TOOL_TYPES.includes(t)) {
             const r = Math.min(Number(fp.radius) || 0, 60);
             controls.push(
@@ -4181,6 +4370,17 @@ export function ObjectPropertyPanel({
                     </TBtn>
                 </div>
             </div>,
+        );
+    }
+
+    if (showAnimPanel) {
+        return (
+            <AnimationPanel
+                el={el}
+                onUpdateProps={onUpdateProps}
+                onBack={() => setShowAnimPanel(false)}
+                devicePreview={devicePreview}
+            />
         );
     }
 
@@ -4347,20 +4547,23 @@ export function ObjectPropertyPanel({
                 </div>
             )}
 
-            {/* Animasi kemunculan */}
+            {/* Animasi -- baris ini membuka panel dedicated, bukan dropdown
+                di tempat. Berlaku untuk SEMUA jenis objek (Teks, Bentuk,
+                Unggahan, Event) karena letaknya di sini, di body bersama
+                ObjectPropertyPanel yang dipakai semua tipe elemen. */}
             <div className="ctl-box">
-                <div className="ctl-row">
+                <button
+                    type="button"
+                    className="anim-open-row"
+                    onClick={() => setShowAnimPanel(true)}
+                >
                     <span className="ctl-label"><IconAnim /></span>
-                    <select
-                        className="ctl-select"
-                        value={fp.animation || "none"}
-                        onChange={(e) => onUpdateProps({ animation: e.target.value })}
-                    >
-                        {ANIMATION_PRESETS.map((a) => (
-                            <option key={a.key} value={a.key}>{a.label}</option>
-                        ))}
-                    </select>
-                </div>
+                    <span className="anim-open-label">Animasi</span>
+                    <span className="anim-open-value">
+                        {(ANIMATION_PRESETS.find((a) => a.key === (fp.animation || "none")) || ANIMATION_PRESETS[0]).label}
+                    </span>
+                    <IconChevronRight />
+                </button>
             </div>
 
             {/* Posisi layer */}
@@ -4416,27 +4619,9 @@ export function ObjectPropertyPanel({
     );
 }
 
-const ANIMATION_PRESETS = [
-    { key: "none", label: "Tanpa Animasi" },
-    { key: "fade", label: "Fade In" },
-    { key: "slide", label: "Slide In" },
-    { key: "zoom", label: "Zoom In" },
-    { key: "bounce", label: "Bounce" },
-    { key: "pop", label: "Pop" },
-];
-
-const FONT_FAMILIES = [
-    { label: "Arial", value: "Arial, sans-serif", preview: "Arial, sans-serif" },
-    { label: "Helvetica", value: "Helvetica, Arial, sans-serif", preview: "Helvetica, Arial, sans-serif" },
-    { label: "Verdana", value: "Verdana, sans-serif", preview: "Verdana, sans-serif" },
-    { label: "Tahoma", value: "Tahoma, sans-serif", preview: "Tahoma, sans-serif" },
-    { label: "Trebuchet MS", value: "'Trebuchet MS', sans-serif", preview: "'Trebuchet MS', sans-serif" },
-    { label: "Times New Roman", value: "'Times New Roman', serif", preview: "'Times New Roman', serif" },
-    { label: "Georgia", value: "Georgia, serif", preview: "Georgia, serif" },
-    { label: "Courier New", value: "'Courier New', monospace", preview: "'Courier New', monospace" },
-    { label: "Impact", value: "Impact, sans-serif", preview: "Impact, sans-serif" },
-    { label: "Comic Sans MS", value: "'Comic Sans MS', cursive", preview: "'Comic Sans MS', cursive" },
-];
+// Katalog 214 font (FONT_CATALOG) + komponen picker-nya ada di
+// ./FontCatalog.js dan ./FontPicker.jsx -- menggantikan daftar 10 font
+// yang dulu ada di sini.
 
 function IconList() {
     return (
@@ -4895,31 +5080,73 @@ function PropertiesPanel({
                 </label>
                 {p.isLink && (
                     <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-                        <PropField label="URL Tujuan" style={{ margin: 0 }}>
-                            <input
-                                type="url"
-                                placeholder="https://contoh.com atau /e/slug-halaman"
-                                value={p.linkUrl || ""}
-                                onChange={(e) => onUpdateProps({ linkUrl: e.target.value })}
-                            />
-                        </PropField>
-                        <PropField label="Target" style={{ margin: 0 }}>
+                        <PropField label="Tipe Tujuan" style={{ margin: 0 }}>
                             <select
-                                value={p.linkTarget || ""}
-                                onChange={(e) => onUpdateProps({ linkTarget: e.target.value })}
+                                value={p.linkType || "external"}
+                                onChange={(e) =>
+                                    onUpdateProps({
+                                        linkType: e.target.value,
+                                        linkTarget:
+                                            e.target.value === "internal"
+                                                ? p.linkType === "internal"
+                                                    ? p.linkTarget
+                                                    : ""
+                                                : p.linkType === "external"
+                                                    ? p.linkTarget
+                                                    : "",
+                                    })
+                                }
                             >
-                                <option value="">_self (tab sama)</option>
-                                <option value="_blank">_blank (tab baru)</option>
+                                <option value="internal">Halaman di situs ini</option>
+                                <option value="external">URL / aplikasi lain</option>
                             </select>
                         </PropField>
+                        {p.linkType !== "external" ? (
+                            <PropField label="Halaman Tujuan" style={{ margin: 0 }}>
+                                {(pages || []).length > 0 ? (
+                                    <select
+                                        value={p.linkTarget || ""}
+                                        onChange={(e) => onUpdateProps({ linkTarget: e.target.value })}
+                                    >
+                                        <option value="">{"— Pilih halaman tujuan —"}</option>
+                                        {pages.map((pg) => (
+                                            <option key={pg.id} value={`/e/${pg.slug}`}>
+                                                {pg.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <>
+                                        <input
+                                            type="text"
+                                            placeholder="/e/slug-halaman"
+                                            value={p.linkTarget || ""}
+                                            onChange={(e) => onUpdateProps({ linkTarget: e.target.value })}
+                                        />
+                                        <span style={{ fontSize: 11, color: "#6b7280" }}>
+                                            Belum ada halaman tersimpan. Masukkan path manual.
+                                        </span>
+                                    </>
+                                )}
+                            </PropField>
+                        ) : (
+                            <PropField label="URL Tujuan" style={{ margin: 0 }}>
+                                <input
+                                    type="text"
+                                    placeholder="https://contoh.com"
+                                    value={p.linkTarget || ""}
+                                    onChange={(e) => onUpdateProps({ linkTarget: e.target.value })}
+                                />
+                            </PropField>
+                        )}
                         <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}>
                             <input
                                 type="checkbox"
-                                checked={p.openInNewTab}
+                                checked={p.openInNewTab !== false}
                                 onChange={(e) => onUpdateProps({ openInNewTab: e.target.checked })}
                                 style={{ width: 16, height: 16, accentColor: "#4f46e5" }}
                             />
-                            <span>Buka di tab baru (setara target="_blank")</span>
+                            <span>Buka di tab baru</span>
                         </label>
                     </div>
                 )}
