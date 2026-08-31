@@ -1,0 +1,108 @@
+{
+  "_jsx-runtime-BC9U6pJr.js": {
+    "file": "assets/jsx-runtime-BC9U6pJr.js",
+    "name": "jsx-runtime"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-CtPbW8Zc.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/css/dashboard.css": {
+    "file": "assets/dashboard-_Izd4xGq.css",
+    "name": "dashboard",
+    "names": [
+      "dashboard.css"
+    ],
+    "src": "resources/css/dashboard.css",
+    "isEntry": true
+  },
+  "resources/css/komando.css": {
+    "file": "assets/komando-BXIcWL6G.css",
+    "name": "komando",
+    "names": [
+      "komando.css"
+    ],
+    "src": "resources/css/komando.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-CcEFHwyy.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/builder.jsx": {
+    "file": "assets/builder-yOlRp5p8.js",
+    "name": "builder",
+    "src": "resources/js/builder.jsx",
+    "isEntry": true,
+    "imports": [
+      "_jsx-runtime-BC9U6pJr.js"
+    ],
+    "css": [
+      "assets/builder-DQFenk6O.css"
+    ]
+  },
+  "resources/js/dashboard.js": {
+    "file": "assets/dashboard-B6toPu02.js",
+    "name": "dashboard",
+    "src": "resources/js/dashboard.js",
+    "isEntry": true
+  },
+  "resources/js/green-landing.jsx": {
+    "file": "assets/green-landing-3ERRfyv3.js",
+    "name": "green-landing",
+    "src": "resources/js/green-landing.jsx",
+    "isEntry": true,
+    "imports": [
+      "_jsx-runtime-BC9U6pJr.js"
+    ],
+    "assets": [
+      "assets/danish-CymTEfhy.svg",
+      "assets/danish-2-DH0h3RPg.svg",
+      "assets/dsanish-2-BSMmS9wb.svg",
+      "assets/group-5-D9QiFJzd.svg",
+      "assets/powered-by-Bm42YzPm.svg",
+      "assets/vector-aQtv7-lE.svg",
+      "assets/vector-14-BMggYsB3.svg",
+      "assets/vector-25-1-D-4uKjOa.svg"
+    ]
+  },
+  "resources/svg/danish-2.svg": {
+    "file": "assets/danish-2-DH0h3RPg.svg",
+    "src": "resources/svg/danish-2.svg"
+  },
+  "resources/svg/danish.svg": {
+    "file": "assets/danish-CymTEfhy.svg",
+    "src": "resources/svg/danish.svg"
+  },
+  "resources/svg/dsanish-2.svg": {
+    "file": "assets/dsanish-2-BSMmS9wb.svg",
+    "src": "resources/svg/dsanish-2.svg"
+  },
+  "resources/svg/group-5.svg": {
+    "file": "assets/group-5-D9QiFJzd.svg",
+    "src": "resources/svg/group-5.svg"
+  },
+  "resources/svg/powered-by.svg": {
+    "file": "assets/powered-by-Bm42YzPm.svg",
+    "src": "resources/svg/powered-by.svg"
+  },
+  "resources/svg/vector-14.svg": {
+    "file": "assets/vector-14-BMggYsB3.svg",
+    "src": "resources/svg/vector-14.svg"
+  },
+  "resources/svg/vector-25-1.svg": {
+    "file": "assets/vector-25-1-D-4uKjOa.svg",
+    "src": "resources/svg/vector-25-1.svg"
+  },
+  "resources/svg/vector.svg": {
+    "file": "assets/vector-aQtv7-lE.svg",
+    "src": "resources/svg/vector.svg"
+  }
+}
