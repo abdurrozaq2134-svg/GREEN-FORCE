@@ -10,6 +10,20 @@
       ],
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "laravel",
+      "runtimeExecutable": "php",
+      "runtimeArgs": [
+        "artisan",
+        "serve",
+        "--port=8123"
+      ],
+      "port": 8123,
+      "env": {
+        "SESSION_DRIVER": "file",
+        "CACHE_STORE": "file"
+      }
     }
   ]
 }

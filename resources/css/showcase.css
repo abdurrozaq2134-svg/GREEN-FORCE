@@ -1,0 +1,773 @@
+/* =========================================================
+   SHOWCASE — immersive scroll experience
+   Standalone stylesheet (no Tailwind layer) so the WebGL
+   stage keeps a self-contained token set.
+   ========================================================= */
+
+:root {
+    --sc-bg: #060a06;
+    --sc-bg-elevated: #0c1409;
+    --sc-surface: rgba(18, 28, 14, 0.55);
+    --sc-surface-strong: rgba(12, 20, 9, 0.82);
+
+    --sc-accent: #8fd42e;
+    --sc-accent-soft: #b6ee63;
+    --sc-cool: #2ee0c0;
+    --sc-warm: #9d86ff;
+
+    --sc-text: #f2f5ec;
+    --sc-text-muted: #b8c0ab;
+    --sc-text-faint: #8b9580;
+
+    --sc-border: rgba(143, 212, 46, 0.22);
+    --sc-border-soft: rgba(242, 245, 236, 0.1);
+
+    --sc-radius-sm: 10px;
+    --sc-radius: 18px;
+    --sc-radius-lg: 28px;
+
+    --sc-space-1: 8px;
+    --sc-space-2: 16px;
+    --sc-space-3: 24px;
+    --sc-space-4: 40px;
+    --sc-space-5: 64px;
+    --sc-space-6: 96px;
+
+    --sc-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --sc-shell: min(1240px, 100% - 2 * var(--sc-space-3));
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body.showcase-body {
+    margin: 0;
+    background: var(--sc-bg);
+    color: var(--sc-text);
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+/* Reveals are only hidden when JS can bring them back. */
+/*
+ * No `will-change` here on purpose: these elements sit inside a backdrop-filtered
+ * panel, and promoting them to their own layer makes Chromium composite the text
+ * through the panel's backdrop root — it renders blurred for the whole transition.
+ */
+.js [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+    transition:
+        opacity 0.7s var(--sc-ease),
+        transform 0.7s var(--sc-ease);
+    transition-delay: calc(var(--reveal-index, 0) * 70ms);
+}
+
+.js [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+body.motion-off *,
+body.motion-off *::before,
+body.motion-off *::after {
+    animation: none !important;
+    transition: none !important;
+}
+
+body.motion-off {
+    scroll-behavior: auto;
+}
+
+/* ---------------------------------------------------------
+   Skip link + focus
+   --------------------------------------------------------- */
+
+.sc-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.sc-skip {
+    position: absolute;
+    left: var(--sc-space-2);
+    top: -100px;
+    z-index: 60;
+    padding: 12px 20px;
+    border-radius: var(--sc-radius-sm);
+    background: var(--sc-accent);
+    color: #08120a;
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 0.2s var(--sc-ease);
+}
+
+.sc-skip:focus {
+    top: var(--sc-space-2);
+}
+
+:where(a, button):focus-visible {
+    outline: 2px solid var(--sc-accent);
+    outline-offset: 3px;
+    border-radius: var(--sc-radius-sm);
+}
+
+/* ---------------------------------------------------------
+   WebGL stage
+   --------------------------------------------------------- */
+
+.sc-stage {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 42%, #12200d 0%, transparent 70%),
+        radial-gradient(ellipse 90% 60% at 8% 0%, #1b2a13 0%, transparent 62%),
+        var(--sc-bg);
+}
+
+.sc-stage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Vignette + scanline grain sell the "rendered" feel over the raw canvas. */
+.sc-stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 78% 62% at 50% 50%, transparent 42%, rgba(3, 6, 3, 0.82) 100%);
+}
+
+.sc-stage.is-fallback {
+    background:
+        radial-gradient(circle at 50% 45%, rgba(143, 212, 46, 0.32) 0%, transparent 46%),
+        radial-gradient(circle at 22% 78%, rgba(46, 224, 192, 0.2) 0%, transparent 44%),
+        radial-gradient(circle at 80% 24%, rgba(124, 92, 255, 0.22) 0%, transparent 42%),
+        var(--sc-bg);
+}
+
+.sc-stage.is-fallback::before {
+    content: '';
+    position: absolute;
+    inset: -20%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(143, 212, 46, 0.14) 90deg,
+        transparent 180deg,
+        rgba(124, 92, 255, 0.12) 270deg,
+        transparent 360deg
+    );
+    animation: sc-sweep 28s linear infinite;
+}
+
+@keyframes sc-sweep {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---------------------------------------------------------
+   Content shell
+   --------------------------------------------------------- */
+
+.sc-content {
+    position: relative;
+    z-index: 1;
+}
+
+.sc-act {
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: var(--sc-space-5) 0;
+}
+
+.sc-shell {
+    width: var(--sc-shell);
+    margin-inline: auto;
+}
+
+.sc-act--start .sc-shell {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.sc-act--end .sc-shell {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sc-act--center .sc-shell {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
+.sc-panel {
+    max-width: 30rem;
+    padding: var(--sc-space-4);
+    border: 1px solid var(--sc-border-soft);
+    border-radius: var(--sc-radius-lg);
+    background: var(--sc-surface);
+    backdrop-filter: blur(18px) saturate(130%);
+    -webkit-backdrop-filter: blur(18px) saturate(130%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 30px 70px -40px rgba(0, 0, 0, 0.9);
+}
+
+.sc-panel--wide {
+    max-width: 38rem;
+}
+
+/* ---------------------------------------------------------
+   Typography
+   --------------------------------------------------------- */
+
+.sc-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sc-space-1);
+    margin: 0 0 var(--sc-space-2);
+    padding: 6px 14px;
+    border: 1px solid var(--sc-border);
+    border-radius: 999px;
+    background: rgba(143, 212, 46, 0.08);
+    color: var(--sc-accent-soft);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.sc-eyebrow svg {
+    width: 14px;
+    height: 14px;
+}
+
+.sc-title {
+    margin: 0 0 var(--sc-space-2);
+    font-size: clamp(1.95rem, 4.4vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+}
+
+.sc-title--hero {
+    font-size: clamp(2.1rem, 4.6vw, 4.25rem);
+}
+
+.sc-title em {
+    font-style: normal;
+    background: linear-gradient(100deg, var(--sc-accent) 0%, var(--sc-cool) 52%, var(--sc-warm) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.sc-heading {
+    margin: 0 0 var(--sc-space-2);
+    font-size: clamp(1.55rem, 3vw, 2.35rem);
+    font-weight: 650;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+}
+
+.sc-lead {
+    margin: 0;
+    max-width: 46ch;
+    color: var(--sc-text-muted);
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+}
+
+.sc-act--center .sc-lead {
+    margin-inline: auto;
+}
+
+/* ---------------------------------------------------------
+   Feature list
+   --------------------------------------------------------- */
+
+.sc-list {
+    display: grid;
+    gap: var(--sc-space-2);
+    margin: var(--sc-space-3) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sc-list li {
+    display: flex;
+    gap: var(--sc-space-2);
+    align-items: flex-start;
+    padding: var(--sc-space-2);
+    border: 1px solid var(--sc-border-soft);
+    border-radius: var(--sc-radius);
+    background: rgba(8, 14, 6, 0.45);
+    transition: border-color 0.25s var(--sc-ease), transform 0.25s var(--sc-ease);
+}
+
+.sc-list li:hover {
+    border-color: var(--sc-border);
+    transform: translateY(-2px);
+}
+
+.sc-list svg {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+    color: var(--sc-accent);
+}
+
+.sc-list strong {
+    display: block;
+    font-size: 0.98rem;
+    font-weight: 600;
+}
+
+.sc-list span {
+    color: var(--sc-text-muted);
+    font-size: 0.9rem;
+}
+
+/* ---------------------------------------------------------
+   Stats
+   --------------------------------------------------------- */
+
+.sc-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--sc-space-2);
+    margin-top: var(--sc-space-3);
+}
+
+.sc-stat {
+    padding: var(--sc-space-2);
+    border: 1px solid var(--sc-border-soft);
+    border-radius: var(--sc-radius);
+    background: rgba(8, 14, 6, 0.5);
+}
+
+.sc-stat dt {
+    color: var(--sc-text-faint);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sc-stat dd {
+    margin: 4px 0 0;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(120deg, var(--sc-accent), var(--sc-cool));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* ---------------------------------------------------------
+   Buttons
+   --------------------------------------------------------- */
+
+.sc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sc-space-2);
+    margin-top: var(--sc-space-3);
+}
+
+.sc-act--center .sc-actions {
+    justify-content: center;
+}
+
+.sc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sc-space-1);
+    min-height: 48px;
+    padding: 0 26px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        transform 0.2s var(--sc-ease),
+        box-shadow 0.25s var(--sc-ease),
+        background-color 0.2s var(--sc-ease),
+        border-color 0.2s var(--sc-ease);
+}
+
+.sc-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sc-btn--primary {
+    background: var(--sc-accent);
+    color: #08120a;
+    box-shadow: 0 12px 40px -14px rgba(143, 212, 46, 0.75);
+}
+
+.sc-btn--primary:hover {
+    background: var(--sc-accent-soft);
+    transform: translateY(-2px);
+    box-shadow: 0 18px 48px -14px rgba(143, 212, 46, 0.9);
+}
+
+.sc-btn--ghost {
+    border-color: var(--sc-border);
+    background: rgba(143, 212, 46, 0.06);
+    color: var(--sc-text);
+}
+
+.sc-btn--ghost:hover {
+    border-color: var(--sc-accent);
+    background: rgba(143, 212, 46, 0.14);
+    transform: translateY(-2px);
+}
+
+/* ---------------------------------------------------------
+   Scroll cue
+   --------------------------------------------------------- */
+
+.sc-cue {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sc-space-1);
+    margin-top: var(--sc-space-3);
+    color: var(--sc-text-faint);
+    font-size: 0.8rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.sc-cue::before {
+    content: '';
+    width: 26px;
+    height: 42px;
+    border: 1.5px solid var(--sc-border);
+    border-radius: 14px;
+    background:
+        radial-gradient(circle 3px at 50% 12px, var(--sc-accent) 0 3px, transparent 3px);
+    animation: sc-cue-drop 2.4s var(--sc-ease) infinite;
+}
+
+@keyframes sc-cue-drop {
+    0%, 100% {
+        background-position: 0 0;
+        opacity: 1;
+    }
+    50% {
+        background-position: 0 10px;
+        opacity: 0.45;
+    }
+}
+
+/* ---------------------------------------------------------
+   Act rail (fixed navigation)
+   --------------------------------------------------------- */
+
+.sc-rail {
+    position: fixed;
+    right: max(var(--sc-space-3), env(safe-area-inset-right));
+    top: 50%;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sc-space-1);
+    transform: translateY(-50%);
+}
+
+.sc-rail__track {
+    position: relative;
+    width: 2px;
+    height: 96px;
+    margin-bottom: var(--sc-space-1);
+    background: var(--sc-border-soft);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.sc-rail__bar {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(var(--sc-accent), var(--sc-cool));
+    transform-origin: top;
+    transform: scaleY(0);
+    transition: transform 0.25s linear;
+}
+
+.sc-rail__dot {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+
+.sc-rail__dot::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--sc-border);
+    border-radius: 50%;
+    background: rgba(242, 245, 236, 0.18);
+    transition:
+        transform 0.3s var(--sc-ease),
+        background-color 0.3s var(--sc-ease),
+        box-shadow 0.3s var(--sc-ease);
+}
+
+.sc-rail__dot:hover::after {
+    background: var(--sc-accent-soft);
+}
+
+.sc-rail__dot.is-active::after {
+    background: var(--sc-accent);
+    transform: scale(1.6);
+    box-shadow: 0 0 0 4px rgba(143, 212, 46, 0.18);
+}
+
+.sc-rail__label {
+    max-width: 8rem;
+    margin-top: var(--sc-space-1);
+    color: var(--sc-text-faint);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-align: center;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+}
+
+/* ---------------------------------------------------------
+   Motion toggle
+   --------------------------------------------------------- */
+
+.sc-motion {
+    position: fixed;
+    left: max(var(--sc-space-3), env(safe-area-inset-left));
+    bottom: max(var(--sc-space-3), env(safe-area-inset-bottom));
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sc-space-1);
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--sc-border-soft);
+    border-radius: 999px;
+    background: var(--sc-surface-strong);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: var(--sc-text-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: border-color 0.2s var(--sc-ease), color 0.2s var(--sc-ease);
+}
+
+.sc-motion:hover {
+    border-color: var(--sc-border);
+    color: var(--sc-text);
+}
+
+.sc-motion svg {
+    width: 16px;
+    height: 16px;
+    color: var(--sc-accent);
+}
+
+.sc-motion[aria-pressed='false'] svg {
+    color: var(--sc-text-faint);
+}
+
+/* ---------------------------------------------------------
+   Brand mark
+   --------------------------------------------------------- */
+
+.sc-brand {
+    position: fixed;
+    left: max(var(--sc-space-3), env(safe-area-inset-left));
+    top: max(var(--sc-space-3), env(safe-area-inset-top));
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--sc-text);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+}
+
+.sc-brand__mark {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--sc-border);
+    border-radius: 9px;
+    background: rgba(143, 212, 46, 0.1);
+    color: var(--sc-accent);
+}
+
+.sc-brand__mark svg {
+    width: 17px;
+    height: 17px;
+}
+
+.sc-brand:hover .sc-brand__mark {
+    border-color: var(--sc-accent);
+}
+
+/* ---------------------------------------------------------
+   Footer
+   --------------------------------------------------------- */
+
+.sc-footer {
+    position: relative;
+    z-index: 1;
+    padding: var(--sc-space-4) 0 calc(var(--sc-space-4) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--sc-border-soft);
+    background: linear-gradient(rgba(6, 10, 6, 0.4), rgba(6, 10, 6, 0.95));
+    color: var(--sc-text-faint);
+    font-size: 0.85rem;
+}
+
+.sc-footer .sc-shell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sc-space-2);
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sc-footer a {
+    color: var(--sc-text-muted);
+    text-decoration: none;
+}
+
+.sc-footer a:hover {
+    color: var(--sc-accent);
+}
+
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+    .sc-act--end .sc-shell,
+    .sc-act--start .sc-shell {
+        justify-content: center;
+    }
+
+    .sc-rail__label {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --sc-space-6: 72px;
+        --sc-shell: calc(100% - 2 * var(--sc-space-2));
+    }
+
+    .sc-panel {
+        padding: var(--sc-space-3);
+        max-width: none;
+    }
+
+    .sc-rail {
+        right: 6px;
+    }
+
+    .sc-rail__track {
+        height: 62px;
+    }
+
+    .sc-motion {
+        font-size: 0.72rem;
+        padding: 0 14px;
+    }
+
+    .sc-brand span {
+        display: none;
+    }
+}
+
+@media (max-width: 380px) {
+    .sc-actions .sc-btn {
+        width: 100%;
+    }
+}
+
+/* Short viewports (laptops, split screens): keep the hero CTA above the fold. */
+@media (max-height: 720px) {
+    :root {
+        --sc-space-5: 44px;
+        --sc-space-6: 64px;
+    }
+
+    .sc-panel {
+        padding: var(--sc-space-3);
+    }
+
+    .sc-title--hero {
+        font-size: clamp(1.9rem, 3.8vw, 3rem);
+    }
+
+    .sc-cue {
+        margin-top: var(--sc-space-2);
+    }
+}
+
+/* Belt-and-braces: honoured even before the script boots. */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .js [data-reveal] {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    .sc-cue::before,
+    .sc-stage.is-fallback::before {
+        animation: none;
+    }
+}

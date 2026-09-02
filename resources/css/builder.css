@@ -1226,6 +1226,14 @@
 /* ===================== FLOATING PROPERTY EDITOR (Canva-style) ===================== */
 /* ===================== STRIP TOOLBAR PROPERTI (celah navbar-canvas) ===================== */
 .builder-center {
+  /* .canvas-edge-handle (tombol pensil "Edit properti elemen") posisinya
+     absolute left:60px/top:50% relatif ke kontainer INI -- tanpa
+     position:relative di sini, absolute-nya lolos ke ancestor ber-position
+     berikutnya (atau ke viewport kalau tidak ada), sehingga left:60px jadi
+     60px dari tepi VIEWPORT, bukan dari tepi kanvas -- persis di bawah
+     sidebar kiri yang lebih lebar dari 60px, jadi tombolnya tidak pernah
+     bisa diklik sama sekali. */
+  position: relative;
   flex: 1;
   min-width: 0;
   display: flex;

@@ -651,7 +651,7 @@ export function findFieldDef(fieldKey) {
 // ===================== UNIVERSAL LINK PROPS (shared across all elements) =====================
 const UNIVERSAL_LINK_PROPS = {
     isLink: false,
-    linkUrl: "",
+    linkType: "external", // "internal" | "external" -- lihat wrapWithLink() di EventBuilder.jsx
     linkTarget: "",
     openInNewTab: true,
 };
@@ -2501,12 +2501,19 @@ function GoogleGlyph() {
     );
 }
 
-// Helper: wrap element with <a> tag if isLink is true
+/**
+ * Helper: wrap element with <a> tag if isLink is true. Cerminan
+ * wrapWithLink() di EventBuilder.jsx -- linkTarget menyimpan tujuan siap
+ * pakai ("/e/slug-halaman" internal atau URL penuh eksternal), bukan nama
+ * target HTML seperti sebelumnya (bug lama: field "Target" di
+ * UniversalLinkSection menimpa linkTarget dengan "_blank"/"_self", jadi
+ * href yang benar-benar terpasang selalu jadi string itu, bukan URL-nya).
+ */
 export function wrapElementWithLink(content, props) {
-    if (!props.isLink || !props.linkUrl) return content;
-    const href = props.linkUrl;
-    const target = props.linkTarget || (props.openInNewTab ? "_blank" : "_self");
-    const rel = props.openInNewTab ? "noopener noreferrer" : "";
+    if (!props.isLink || !props.linkTarget) return content;
+    const href = props.linkTarget;
+    const target = props.openInNewTab !== false ? "_blank" : "_self";
+    const rel = props.openInNewTab !== false ? "noopener noreferrer" : "";
     return (
         <a href={href} target={target} rel={rel} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
             {content}
@@ -2515,56 +2522,99 @@ export function wrapElementWithLink(content, props) {
 }
 
 // ===================== UNIVERSAL LINK SECTION =====================
-function UniversalLinkSection({ p, onUpdateProps }) {
+/**
+ * Sebelumnya field "URL Tujuan" nulis ke p.linkUrl, sementara wrapWithLink()
+ * di EventBuilder.jsx (dan cerminannya di public.blade.php) membaca href
+ * dari p.linkTarget -- field "Target" (_self/_blank/dst) malah nulis ke
+ * p.linkTarget juga, jadi menimpa URL asli dengan string "_blank". Toggle
+ * "Jadikan tautan" untuk komponen Event (Countdown, Jadwal, Tiket, dst)
+ * tidak pernah benar-benar berfungsi. Disamakan dengan pola yang sudah benar
+ * di elemen dasar (teks/bentuk/gambar): linkType internal/eksternal +
+ * linkTarget sebagai tujuan siap pakai.
+ */
+export function UniversalLinkSection({ p, onUpdateProps, pages = [] }) {
     return (
-        <>
-            <div className="prop-group" style={{ borderTop: "1px solid #e5e7eb", marginTop: "1rem", paddingTop: "1rem" }}>
-                <label className="prop-group-label">Tautan (Universal)</label>
-                <div className="prop-group checkbox-group" style={{ marginBottom: "0.5rem" }}>
-                    <label>
-                        <input
-                            type="checkbox"
-                            checked={p.isLink}
-                            onChange={(e) => onUpdateProps({ isLink: e.target.checked })}
-                        />
-                        Jadikan tautan (klik akan mengarah ke URL)
-                    </label>
-                </div>
-                {p.isLink && (
-                    <>
+        <div className="prop-group" style={{ borderTop: "1px solid #e5e7eb", marginTop: "1rem", paddingTop: "1rem" }}>
+            <label className="prop-group-label">Tautan (Universal)</label>
+            <div className="prop-group checkbox-group" style={{ marginBottom: "0.5rem" }}>
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={p.isLink}
+                        onChange={(e) => onUpdateProps({ isLink: e.target.checked })}
+                    />
+                    Jadikan tautan (klik akan mengarah ke halaman lain)
+                </label>
+            </div>
+            {p.isLink && (
+                <>
+                    <PropField label="Tipe Tujuan">
+                        <select
+                            value={p.linkType || "external"}
+                            onChange={(e) =>
+                                onUpdateProps({
+                                    linkType: e.target.value,
+                                    linkTarget:
+                                        e.target.value === "internal"
+                                            ? p.linkType === "internal"
+                                                ? p.linkTarget
+                                                : ""
+                                            : p.linkType === "external"
+                                                ? p.linkTarget
+                                                : "",
+                                })
+                            }
+                        >
+                            <option value="internal">Halaman di situs ini</option>
+                            <option value="external">URL / aplikasi lain</option>
+                        </select>
+                    </PropField>
+                    {p.linkType !== "external" ? (
+                        <PropField label="Halaman Tujuan">
+                            {(pages || []).length > 0 ? (
+                                <select
+                                    value={p.linkTarget || ""}
+                                    onChange={(e) => onUpdateProps({ linkTarget: e.target.value })}
+                                >
+                                    <option value="">{"— Pilih halaman tujuan —"}</option>
+                                    {pages.map((pg) => (
+                                        <option key={pg.id} value={`/e/${pg.slug}`}>
+                                            {pg.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <input
+                                    type="text"
+                                    placeholder="/e/slug-halaman"
+                                    value={p.linkTarget || ""}
+                                    onChange={(e) => onUpdateProps({ linkTarget: e.target.value })}
+                                />
+                            )}
+                        </PropField>
+                    ) : (
                         <PropField label="URL Tujuan">
                             <input
-                                type="url"
-                                value={p.linkUrl}
-                                onChange={(e) => onUpdateProps({ linkUrl: e.target.value })}
+                                type="text"
+                                value={p.linkTarget || ""}
+                                onChange={(e) => onUpdateProps({ linkTarget: e.target.value })}
                                 placeholder="https://example.com atau #section-id"
                             />
                         </PropField>
-                        <PropField label="Target">
-                            <select
-                                value={p.linkTarget}
-                                onChange={(e) => onUpdateProps({ linkTarget: e.target.value })}
-                            >
-                                <option value="">_self (tab sama)</option>
-                                <option value="_blank">_blank (tab baru)</option>
-                                <option value="_parent">_parent</option>
-                                <option value="_top">_top</option>
-                            </select>
-                        </PropField>
-                        <div className="prop-group checkbox-group">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={p.openInNewTab}
-                                    onChange={(e) => onUpdateProps({ openInNewTab: e.target.checked })}
-                                />
-                                Buka di tab baru (rel="noopener noreferrer")
-                            </label>
-                        </div>
-                    </>
-                )}
-            </div>
-        </>
+                    )}
+                    <div className="prop-group checkbox-group">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={p.openInNewTab}
+                                onChange={(e) => onUpdateProps({ openInNewTab: e.target.checked })}
+                            />
+                            Buka di tab baru (rel="noopener noreferrer")
+                        </label>
+                    </div>
+                </>
+            )}
+        </div>
     );
 }
 
@@ -2607,9 +2657,6 @@ export function EventPropertiesPanel({ element, onUpdateProps, pages = [], eleme
             </PropField>
         </>
     ) : null;
-
-    // Universal link section for ALL element types
-    const universalLinkSection = <UniversalLinkSection p={p} onUpdateProps={onUpdateProps} />;
 
     const body = (() => {
         switch (element.type) {
@@ -4131,7 +4178,6 @@ export function EventPropertiesPanel({ element, onUpdateProps, pages = [], eleme
         <>
             {widthPresetControl}
             {body}
-            {universalLinkSection}
         </>
     );
 }

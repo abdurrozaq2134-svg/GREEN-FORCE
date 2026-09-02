@@ -15,6 +15,7 @@ import {
     renderEventElement,
     wrapElementWithLink,
     EventPropertiesPanel,
+    UniversalLinkSection,
     resolveScopeForNew,
     isElementVisibleInMode,
     elementScope,
@@ -2556,6 +2557,12 @@ const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved |
                             ref={edgeHandleRef}
                             className="canvas-edge-handle"
                             title="Edit properti elemen"
+                            // CSS-nya left:60px statis, dengan asumsi sidebar selalu
+                            // 60px lebar (rail saja). Sidebar sungguhan bisa sampai
+                            // 320px (rail + panel) dan posisinya fixed/overlay --
+                            // tanpa override ini tombolnya selalu tertutup sidebar
+                            // dan tidak pernah bisa diklik.
+                            style={{ left: Math.max(sidebarW, 60) }}
                             onMouseEnter={() => {
                                 cancelEdgeClose();
                                 openObjectEditor();
@@ -4449,13 +4456,20 @@ export function ObjectPropertyPanel({
                     <EventPropertiesPanel
                         element={el}
                         onUpdateProps={onUpdateProps}
-                        pages={eventPages}
+                        pages={pages}
                         elements={siblingElements}
                     />
                 </div>
             )}
 
-            {/* Efek visual: bayangan / border / blur
+            {/* Tautan: berlaku untuk SEMUA jenis objek (teks, bentuk,
+                unggahan, tombol, komponen event), bukan cuma yang isEvent --
+                makanya dirender di sini, di luar blok isEvent di atas. */}
+            <div className="ctl-box">
+                <UniversalLinkSection p={fp} onUpdateProps={onUpdateProps} pages={pages} />
+            </div>
+
+            {/* Efek visual: bayangan / border / blur */}
             {(isShape || t === "image" || t === "video" || isEvent || isTextLike) && (
                 <div className="ctl-box">
                     <p className="ctl-box-title">Efek Visual</p>

@@ -22,6 +22,9 @@ Route::get('/', function () {
     return view('main page.landing');
 })->name('landing');
 
+// Showcase gulir imersif — halaman publik, tidak butuh autentikasi.
+Route::view('/showcase', 'showcase')->name('showcase');
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [BuilderController::class, 'index'])->name('dashboard');
     Route::delete('/event-saya/{eventPage}', [BuilderController::class, 'destroy'])->name('events.destroy');

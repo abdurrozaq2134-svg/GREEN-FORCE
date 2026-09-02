@@ -373,6 +373,7 @@
                             width: ${widthPct}%;
                             ${heightPct !== undefined ? `height: ${heightPct}%;` : ''}
                             box-sizing: border-box;
+                            ${racikFxToCss(el.props && el.props.effects)}
                         `;
 
                         element.innerHTML = racikWrapWithLink(renderElement(el), el.props);
@@ -876,6 +877,33 @@
          * pun di halaman publik -- markup-nya dirender di sini, dan di sini
          * tidak pernah ada logika pembungkus <a> sama sekali.
          */
+        /**
+         * Cerminan fxToCss() di EventBuilder.jsx -- efek visual (bayangan,
+         * border, blur) yang EO atur lewat panel properti tersimpan di
+         * props.effects, tapi sebelumnya TIDAK PERNAH dirender di halaman
+         * publik sama sekali (hanya tampil di kanvas builder). EO mendesain
+         * bayangan yang bagus, publish, dan bayangannya hilang.
+         */
+        function racikFxToCss(effects) {
+            if (!Array.isArray(effects)) return '';
+            const shadows = [];
+            const filters = [];
+            effects.forEach(function (f) {
+                if (!f || !f.type) return;
+                if (f.type === 'shadow') {
+                    shadows.push((Number(f.offsetX) || 0) + 'px ' + (Number(f.offsetY) || 4) + 'px ' + (Number(f.blur) || 8) + 'px ' + (f.color || 'rgba(0,0,0,.35)'));
+                } else if (f.type === 'border') {
+                    shadows.push('0 0 0 ' + (Number(f.width) || 2) + 'px ' + (f.color || '#111111'));
+                } else if (f.type === 'blur') {
+                    filters.push('blur(' + (Number(f.radius) || 0) + 'px)');
+                }
+            });
+            let css = '';
+            if (shadows.length) css += 'box-shadow:' + shadows.join(', ') + ';';
+            if (filters.length) css += 'filter:' + filters.join(' ') + ';';
+            return css;
+        }
+
         function racikWrapWithLink(html, props) {
             const p = props || {};
             if (!p.isLink || !p.linkTarget) return html;

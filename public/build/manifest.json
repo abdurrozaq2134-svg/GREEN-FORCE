@@ -4,7 +4,7 @@
     "name": "jsx-runtime"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CtPbW8Zc.css",
+    "file": "assets/app-BXFISvo_.css",
     "name": "app",
     "names": [
       "app.css"
@@ -30,6 +30,15 @@
     "src": "resources/css/komando.css",
     "isEntry": true
   },
+  "resources/css/showcase.css": {
+    "file": "assets/showcase-E31FQ7PP.css",
+    "name": "showcase",
+    "names": [
+      "showcase.css"
+    ],
+    "src": "resources/css/showcase.css",
+    "isEntry": true
+  },
   "resources/js/app.js": {
     "file": "assets/app-CcEFHwyy.js",
     "name": "app",
@@ -37,7 +46,7 @@
     "isEntry": true
   },
   "resources/js/builder.jsx": {
-    "file": "assets/builder-yOlRp5p8.js",
+    "file": "assets/builder-C_wU8RFd.js",
     "name": "builder",
     "src": "resources/js/builder.jsx",
     "isEntry": true,
@@ -45,7 +54,7 @@
       "_jsx-runtime-BC9U6pJr.js"
     ],
     "css": [
-      "assets/builder-DQFenk6O.css"
+      "assets/builder-tYbMiyzl.css"
     ]
   },
   "resources/js/dashboard.js": {
@@ -72,6 +81,12 @@
       "assets/vector-14-BMggYsB3.svg",
       "assets/vector-25-1-D-4uKjOa.svg"
     ]
+  },
+  "resources/js/showcase.js": {
+    "file": "assets/showcase-B79GpC3p.js",
+    "name": "showcase",
+    "src": "resources/js/showcase.js",
+    "isEntry": true
   },
   "resources/svg/danish-2.svg": {
     "file": "assets/danish-2-DH0h3RPg.svg",
